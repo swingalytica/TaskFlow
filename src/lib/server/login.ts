@@ -1,0 +1,43 @@
+import bcrypt from 'bcrypt';
+import { user_model } from './models';
+import { email_regex } from './utils';
+
+export async function login_user(email: string, password: string) {
+	const user = await get_user(email, password);
+
+	if ('error' in user) {
+		return { error: user.error };
+	}
+
+	return { user };
+}
+
+async function get_user(email: string, password: string): Promise<{ error: string } | App.User> {
+	if (!email) {
+		return { error: 'E-Mail ist erforderlich' };
+	}
+
+	if (!email.match(email_regex)) {
+		return { error: 'E-Mail ist ungültig' };
+	}
+
+	if (!password) {
+		return { error: 'Passwort ist erforderlich' };
+	}
+
+	const user = await user_model.findOne({ email });
+
+	if (!user) {
+		return { error: 'E-Mail oder Passwort ist ungültig' };
+	}
+
+	const password_is_correct = await bcrypt.compare(password, user.password);
+
+	if (!password_is_correct) {
+		return { error: 'Passwort ist ungültig' };
+	}
+
+	const id = user._id.toString();
+
+	return { id, email: user.email };
+}

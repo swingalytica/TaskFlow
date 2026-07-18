@@ -4,9 +4,10 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import type { ActionData } from '../../routes/register/$types';
+	import type { ActionData as LoginActionData } from '../../routes/login/$types';
+	import type { ActionData as RegisterActionData } from '../../routes/register/$types';
 
-	const { form }: { form: ActionData } = $props();
+	const { form }: { form: RegisterActionData | LoginActionData } = $props();
 
 	const id = $props.id();
 </script>
@@ -42,9 +43,14 @@
 					<Button type="submit" class="w-full">Login</Button>
 				</Field>
 				<Field>
+					{#if form?.user}
+						<p class="text-sm text-success">
+							Erfolgreich angemeldet als {form.user.email}. Sie können nun fortfahren.
+						</p>
+					{/if}
 					{#if form?.error}
 						<p class="text-sm text-destructive">{form.error}</p>
-					{:else if form?.success_message}
+					{:else if form && 'success_message' in form && form.success_message}
 						<p class="text-sm text-success">{form.success_message}</p>
 					{/if}
 				</Field>
