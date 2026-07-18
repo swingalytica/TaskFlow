@@ -1,8 +1,9 @@
+import bcrypt from 'bcrypt';
 import { user_model } from './models';
 import { email_regex } from './utils';
 
 export async function register_user(email: string, password: string): Promise<{ error: string }> {
-	const email_error = verify_email(email);
+	const email_error = await verify_email(email);
 	const password_error = verify_password(password);
 
 	if (email_error) {
@@ -13,7 +14,10 @@ export async function register_user(email: string, password: string): Promise<{ 
 		return { error: password_error };
 	}
 
-	const user = new user_model({ email, password });
+	const salt_rounds = 10;
+	const hashed_password = await bcrypt.hash(password, salt_rounds);
+
+	const user = new user_model({ email, password: hashed_password });
 
 	try {
 		await user.save();
@@ -26,7 +30,7 @@ export async function register_user(email: string, password: string): Promise<{ 
 	}
 }
 
-export function verify_email(email: string): string {
+export async function verify_email(email: string): Promise<string> {
 	if (!email) {
 		return 'Email ist erforderlich';
 	}
@@ -35,7 +39,11 @@ export function verify_email(email: string): string {
 		return 'Bitte geben Sie eine gültige E-Mail-Adresse ein';
 	}
 
-	// TODO: Check if email is already registered in the database
+	const previous_user = await user_model.findOne({ email });
+
+	if (previous_user) {
+		return 'Diese E-Mail-Adresse ist bereits registriert';
+	}
 
 	return '';
 }

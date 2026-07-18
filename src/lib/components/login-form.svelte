@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
@@ -18,7 +19,7 @@
 		>
 	</Card.Header>
 	<Card.Content>
-		<form method="POST" action="?/login">
+		<form method="POST" action="?/login" use:enhance>
 			<FieldGroup>
 				<Field>
 					<FieldLabel for="email-{id}">E-Mail</FieldLabel>
@@ -44,7 +45,7 @@
 					{#if form?.error}
 						<p class="text-sm text-destructive">{form.error}</p>
 					{:else if form?.success_message}
-						<p class="text-success text-sm">{form.success_message}</p>
+						<p class="text-sm text-success">{form.success_message}</p>
 					{/if}
 				</Field>
 			</FieldGroup>
