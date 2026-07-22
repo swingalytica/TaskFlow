@@ -13,10 +13,10 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Plus } from '@lucide/svelte';
-	import type { ActionData } from '../../routes/app/[id]/$types';
+	import type { ActionData, PageData } from '../../routes/app/[id]/$types';
 	import Column from './Column.svelte';
 
-	let { form }: { form: ActionData } = $props();
+	let { form, data }: { form: ActionData; data: PageData } = $props();
 
 	let sorted_columns = $state<ColumnType[]>([]);
 
@@ -133,6 +133,7 @@
 			{column}
 			{form}
 			{index}
+			available_labels={data?.labels ?? []}
 			{dragStart}
 			{dragOver}
 			{dragEnd}

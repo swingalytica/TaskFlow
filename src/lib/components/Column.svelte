@@ -14,6 +14,7 @@
 		column,
 		form,
 		index,
+		available_labels,
 		dragStart,
 		dragOver,
 		dragEnd,
@@ -24,6 +25,11 @@
 		column: ColumnType;
 		form: ActionData;
 		index: number;
+		available_labels: {
+			_id: string;
+			name: string;
+			color: string;
+		}[];
 		dragStart: (index: number) => void;
 		dragOver: (event: DragEvent, index: number) => void;
 		dragEnd: () => void;
@@ -107,7 +113,7 @@
 		}}
 	>
 		{#each cards_for_column(column._id) as card, index (card._id)}
-			<Card {card} column={column._id} {index} {cardDragStart} {cardDragEnd} />
+			<Card {card} column={column._id} {index} {available_labels} {cardDragStart} {cardDragEnd} />
 		{/each}
 
 		<Button

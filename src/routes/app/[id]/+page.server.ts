@@ -1,6 +1,7 @@
 import { authenticate } from '$lib/server/authenticate';
 import { board_model } from '$lib/server/mongodb/models/board';
 import { card_model } from '$lib/server/mongodb/models/card';
+import { label_model } from '$lib/server/mongodb/models/label';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
 import { project_model } from '$lib/server/mongodb/models/project';
@@ -18,10 +19,12 @@ export const load: PageServerLoad = async (event) => {
 
 	const organization = await organization_model.findById(organization_id).lean();
 	const projects = await project_model.find({ organization: organization_id }).lean();
+	const labels = await label_model.find({ organization: organization_id }).lean();
 
 	return {
 		organization: JSON.parse(JSON.stringify(organization)),
-		projects: JSON.parse(JSON.stringify(projects))
+		projects: JSON.parse(JSON.stringify(projects)),
+		labels: JSON.parse(JSON.stringify(labels))
 	};
 };
 
@@ -391,8 +394,15 @@ export const actions: Actions = {
 			const title = data.get('title') as string;
 			const description = data.get('description') as string;
 			const due_date = data.get('due_date') as string;
+			const labels = (data.get('labels') as string)?.split(',').filter(Boolean) || [];
 
-			console.log({ card_id, title, description, due_date });
+			if (!card_id || !title) {
+				return fail(400, {
+					error: 'Card ID and title are required'
+				});
+			}
+
+			console.log({ card_id, title, description, due_date, labels });
 		} catch (error) {
 			console.error(error);
 			return fail(500, {

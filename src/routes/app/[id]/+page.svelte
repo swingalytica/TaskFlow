@@ -9,6 +9,6 @@
 <div class="flex h-screen">
 	<Sidebar {data} />
 	{#if form?.success}
-		<Board {form} />
+		<Board {form} {data} />
 	{/if}
 </div>

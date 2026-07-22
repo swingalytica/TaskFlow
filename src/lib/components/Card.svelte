@@ -4,6 +4,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import * as Select from '$lib/components/ui/select';
 
 	type CardType = {
 		_id: string;
@@ -23,22 +24,28 @@
 		card,
 		column,
 		index,
+		available_labels,
 		cardDragStart,
 		cardDragEnd
 	}: {
 		card: CardType;
 		column: string;
 		index: number;
+		available_labels: {
+			_id: string;
+			name: string;
+			color: string;
+		}[];
 		cardDragStart: (card_id: string, column_id: string, index: number) => void;
 		cardDragEnd: (card_id: string, column_id: string, order: number) => void;
 	} = $props();
 
 	let dialog_open = $state(false);
-
-	let title = $state(card.title);
-	let description = $state(card.description);
-	let due_date = $state(card.due_date ?? '');
-	let labels = $state([...card.labels]);
+	let title = $derived(card.title);
+	let description = $derived(card.description);
+	let due_date = $derived(card.due_date ?? '');
+	let labels = $derived([...card.labels]);
+	let selected_labels = $derived<string[]>(card.labels.map((label) => label._id));
 
 	function open_dialog() {
 		title = card.title;
@@ -101,17 +108,38 @@
 					<Label>Labels</Label>
 
 					<div class="flex flex-wrap gap-2">
-						{#each card.labels as label}
-							<span
-								class="rounded px-2 py-1 text-xs text-white"
-								style="background-color: {label.color}"
-							>
-								{label.name}
-							</span>
+						{#each selected_labels as label_id}
+							{#each available_labels.filter((label) => label._id === label_id) as label}
+								<span
+									class="rounded px-2 py-1 text-xs text-white"
+									style="background-color: {label.color}"
+								>
+									{label.name}
+								</span>
+							{/each}
 						{/each}
 					</div>
 
-					<Button variant="outline">Add label</Button>
+					<Select.Root type="multiple" bind:value={selected_labels}>
+						<Select.Trigger class="w-72">Select multiple labels</Select.Trigger>
+
+						<Select.Content>
+							<Select.Group>
+								<Select.Label>Available Labels</Select.Label>
+
+								{#each available_labels as label}
+									<Select.Item value={label._id}>
+										<span
+											class="rounded px-2 py-1 text-xs text-white"
+											style="background-color: {label.color}"
+										>
+											{label.name}
+										</span>
+									</Select.Item>
+								{/each}
+							</Select.Group>
+						</Select.Content>
+					</Select.Root>
 				</div>
 
 				<!-- Fälligkeitsdatum -->
@@ -135,6 +163,7 @@
 				<Button type="submit">Save</Button>
 			</Dialog.Footer>
 			<input type="hidden" name="card_id" value={card._id} hidden />
+			<input type="hidden" name="labels" value={selected_labels.join(',')} hidden />
 		</form>
 	</Dialog.Content>
 </Dialog.Root>
