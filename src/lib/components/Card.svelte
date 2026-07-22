@@ -124,7 +124,7 @@
 </button>
 
 <Dialog.Root bind:open={dialog_open}>
-	<Dialog.Content class="sm:max-w-xl">
+	<Dialog.Content class="max-h-[90vh] overflow-y-auto sm:max-w-xl">
 		<Dialog.Header class="mb-4 flex gap-4">
 			{#if !card.completed}
 				<form action="?/mark_card_completed" method="POST" use:enhance>
@@ -210,6 +210,10 @@
 					<Input type="date" id="due_date" name="due_date" bind:value={due_date} />
 				</div>
 
+				<Dialog.Footer>
+					<Button type="submit">Save</Button>
+				</Dialog.Footer>
+
 				<!-- Aktivität -->
 				<div class="flex flex-col gap-2">
 					<Label>Activity</Label>
@@ -236,9 +240,6 @@
 				</div>
 			</div>
 
-			<Dialog.Footer>
-				<Button type="submit">Save</Button>
-			</Dialog.Footer>
 			<input type="hidden" name="card_id" value={card._id} hidden />
 			<input type="hidden" name="labels" value={selected_labels.join(',')} hidden />
 			<input type="hidden" name="board_id" value={board_id} hidden />
