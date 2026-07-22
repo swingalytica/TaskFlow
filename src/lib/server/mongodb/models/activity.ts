@@ -1,5 +1,18 @@
 import mongoose from 'mongoose';
 
+export enum ActivityType {
+	CREATED = 'CREATED',
+	COMPLETED = 'COMPLETED',
+	ARCHIVED = 'ARCHIVED',
+	MOVED = 'MOVED',
+	ASSIGNED = 'ASSIGNED',
+	UNASSIGNED = 'UNASSIGNED',
+	MESSAGE = 'MESSAGE',
+	ADD_CHECKLIST_ITEM = 'ADD_CHECKLIST_ITEM',
+	REMOVE_CHECKLIST_ITEM = 'REMOVE_CHECKLIST_ITEM',
+	UPDATE_CHECKLIST_ITEM = 'UPDATE_CHECKLIST_ITEM'
+}
+
 const activity_schema = new mongoose.Schema(
 	{
 		card: {
@@ -14,25 +27,11 @@ const activity_schema = new mongoose.Schema(
 		},
 		type: {
 			type: String,
-			enum: [
-				'CREATED',
-				'UPDATED_TITLE',
-				'UPDATED_DESCRIPTION',
-				'UPDATED_DUE_DATE',
-				'ADDED_LABEL',
-				'REMOVED_LABEL',
-				'COMPLETED',
-				'ARCHIVED',
-				'MOVED'
-			],
+			enum: Object.values(ActivityType),
 			required: true
 		},
 		data: {
 			type: mongoose.Schema.Types.Mixed
-		},
-		description: {
-			type: String,
-			required: true
 		}
 	},
 	{

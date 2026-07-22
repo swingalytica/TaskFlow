@@ -1,4 +1,5 @@
 import { authenticate } from '$lib/server/authenticate';
+import { activity_model, ActivityType } from '$lib/server/mongodb/models/activity';
 import { board_model } from '$lib/server/mongodb/models/board';
 import { card_model } from '$lib/server/mongodb/models/card';
 import { label_model } from '$lib/server/mongodb/models/label';
@@ -299,46 +300,82 @@ export const actions: Actions = {
 			cards: JSON.parse(JSON.stringify(await card_model.find({ board: board_id }).lean()))
 		};
 	},
-	add_card: async ({ request }) => {
-		const data = await request.formData();
+	add_card: async ({ request, cookies }) => {
+		try {
+			const authenticated = authenticate(cookies);
 
-		const board_id = data.get('board_id');
-		const column_id = data.get('column_id');
-		const title = data.get('title');
+			if (!authenticated) {
+				return fail(401, {
+					error: 'Not authenticated'
+				});
+			}
 
-		if (
-			typeof board_id !== 'string' ||
-			typeof column_id !== 'string' ||
-			typeof title !== 'string'
-		) {
-			return fail(400, {
-				error: 'Invalid data'
+			const user_id = authenticated.id;
+
+			const data = await request.formData();
+
+			const board_id = data.get('board_id');
+			const column_id = data.get('column_id');
+			const title = data.get('title');
+
+			if (
+				typeof board_id !== 'string' ||
+				typeof column_id !== 'string' ||
+				typeof title !== 'string'
+			) {
+				return fail(400, {
+					error: 'Invalid data'
+				});
+			}
+
+			const last_card = await card_model
+				.findOne({
+					column: column_id
+				})
+				.sort({
+					order: -1
+				});
+
+			const card = await card_model.create({
+				title,
+				board: board_id,
+				column: column_id,
+				order: last_card ? last_card.order + 1 : 0
+			});
+
+			await activity_model.create({
+				card: card._id,
+				user: user_id,
+				type: ActivityType.CREATED,
+				data: {
+					title: card.title
+				}
+			});
+
+			return {
+				success: true,
+				board: JSON.parse(JSON.stringify(await board_model.findById(board_id).lean())),
+				cards: JSON.parse(JSON.stringify(await card_model.find({ board: board_id }).lean()))
+			};
+		} catch (error) {
+			console.error(error);
+			return fail(500, {
+				error: 'Internal Server Error'
 			});
 		}
-
-		const last_card = await card_model
-			.findOne({
-				column: column_id
-			})
-			.sort({
-				order: -1
-			});
-
-		await card_model.create({
-			title,
-			board: board_id,
-			column: column_id,
-			order: last_card ? last_card.order + 1 : 0
-		});
-
-		return {
-			success: true,
-			board: JSON.parse(JSON.stringify(await board_model.findById(board_id).lean())),
-			cards: JSON.parse(JSON.stringify(await card_model.find({ board: board_id }).lean()))
-		};
 	},
-	reorder_card: async ({ request }) => {
+	reorder_card: async ({ request, cookies }) => {
 		try {
+			const authenticated = authenticate(cookies);
+
+			if (!authenticated) {
+				return fail(401, {
+					error: 'Not authenticated'
+				});
+			}
+
+			const user_id = authenticated.id;
+
 			const data = await request.formData();
 
 			const board_id = data.get('board_id');
@@ -354,6 +391,8 @@ export const actions: Actions = {
 				return fail(400);
 			}
 
+			const old_card = await card_model.findById(card_id).lean();
+
 			await card_model.updateOne(
 				{
 					_id: card_id
@@ -365,6 +404,18 @@ export const actions: Actions = {
 					}
 				}
 			);
+
+			await activity_model.create({
+				card: card_id,
+				user: user_id,
+				type: ActivityType.MOVED,
+				data: {
+					from_column: old_card?.column.toString(),
+					to_column: column_id,
+					from_order: old_card?.order,
+					to_order: order
+				}
+			});
 
 			const board = await board_model.findById(board_id).lean();
 
@@ -403,8 +454,6 @@ export const actions: Actions = {
 				});
 			}
 
-			console.log({ card_id, title, description, due_date, labels });
-
 			const card = await card_model.findByIdAndUpdate(
 				card_id,
 				{
@@ -437,8 +486,18 @@ export const actions: Actions = {
 			});
 		}
 	},
-	mark_card_completed: async ({ request }) => {
+	mark_card_completed: async ({ request, cookies }) => {
 		try {
+			const authenticated = authenticate(cookies);
+
+			if (!authenticated) {
+				return fail(401, {
+					error: 'Not authenticated'
+				});
+			}
+
+			const user_id = authenticated.id;
+
 			const data = await request.formData();
 
 			const card_id = data.get('card_id') as string;
@@ -466,6 +525,15 @@ export const actions: Actions = {
 					error: 'Card not found'
 				});
 			}
+
+			await activity_model.create({
+				card: card_id,
+				user: user_id,
+				type: ActivityType.COMPLETED,
+				data: {
+					completed
+				}
+			});
 
 			const board = await board_model.findById({ _id: board_id }).lean();
 			const cards = await card_model.find({ board: board_id }).lean();
