@@ -16,7 +16,10 @@
 		index,
 		dragStart,
 		dragOver,
-		dragEnd
+		dragEnd,
+		cardDragStart,
+		cardDragOver,
+		cardDragEnd
 	}: {
 		column: ColumnType;
 		form: ActionData;
@@ -24,6 +27,9 @@
 		dragStart: (index: number) => void;
 		dragOver: (event: DragEvent, index: number) => void;
 		dragEnd: () => void;
+		cardDragStart: (card_id: string, column_id: string, index: number) => void;
+		cardDragOver: (column_id: string, order: number) => void;
+		cardDragEnd: (card_id: string, column_id: string, order: number) => void;
 	} = $props();
 
 	function cards_for_column(column_id: string) {
@@ -92,9 +98,16 @@
 		</div>
 	</div>
 
-	<div class="flex flex-col gap-2 px-3 pb-3">
-		{#each cards_for_column(column._id) as card (card._id)}
-			<Card {card} />
+	<div
+		role="list"
+		class="flex min-h-20 flex-col gap-2 px-3 pb-3"
+		ondragover={(event) => {
+			event.preventDefault();
+			cardDragOver(column._id, cards_for_column(column._id).length);
+		}}
+	>
+		{#each cards_for_column(column._id) as card, index (card._id)}
+			<Card {card} column={column._id} {index} {cardDragStart} {cardDragEnd} />
 		{/each}
 
 		<Button

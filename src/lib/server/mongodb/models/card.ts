@@ -10,4 +10,10 @@ const card_schema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
+card_schema.index({
+	board: 1,
+	column: 1,
+	order: 1
+});
+
 export const card_model = mongoose.model('Card', card_schema);

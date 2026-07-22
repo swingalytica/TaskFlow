@@ -333,5 +333,56 @@ export const actions: Actions = {
 			board: JSON.parse(JSON.stringify(await board_model.findById(board_id).lean())),
 			cards: JSON.parse(JSON.stringify(await card_model.find({ board: board_id }).lean()))
 		};
+	},
+	reorder_card: async ({ request }) => {
+		try {
+			const data = await request.formData();
+
+			const board_id = data.get('board_id');
+			const card = JSON.parse(data.get('card') as string);
+
+			const card_id = card.card_id;
+			const column_id = card.column_id;
+			const order = card.order;
+
+			if (
+				typeof card_id !== 'string' ||
+				typeof column_id !== 'string' ||
+				typeof order !== 'number'
+			) {
+				return fail(400);
+			}
+
+			await card_model.updateOne(
+				{
+					_id: card_id
+				},
+				{
+					$set: {
+						column: column_id,
+						order: Number(order)
+					}
+				}
+			);
+
+			const board = await board_model.findById(board_id).lean();
+
+			if (!board) {
+				return fail(404, {
+					error: 'Board not found'
+				});
+			}
+
+			return {
+				success: true,
+				board: JSON.parse(JSON.stringify(board)),
+				cards: JSON.parse(JSON.stringify(await card_model.find({ board: board._id }).lean()))
+			};
+		} catch (error) {
+			console.error(error);
+			return fail(500, {
+				error: 'Internal Server Error'
+			});
+		}
 	}
 };

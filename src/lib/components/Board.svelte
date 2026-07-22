@@ -18,9 +18,7 @@
 
 	let { form }: { form: ActionData } = $props();
 
-	let sorted_columns = $state<ColumnType[]>(
-		[...(form?.board?.columns ?? [])].sort((a, b) => a.order - b.order)
-	);
+	let sorted_columns = $state<ColumnType[]>([]);
 
 	let initialized = false;
 
@@ -79,11 +77,69 @@
 
 		reorder_form.requestSubmit();
 	}
+
+	let card_input: HTMLInputElement;
+	let card_reorder_form: HTMLFormElement;
+
+	let draggingCard = $state<{
+		id: string;
+		column: string;
+		index: number;
+	} | null>(null);
+
+	let cardDropTarget = $state<{
+		column: string;
+		index: number;
+	} | null>(null);
+
+	function cardDragStart(card_id: string, column_id: string, index: number) {
+		draggingCard = {
+			id: card_id,
+			column: column_id,
+			index
+		};
+	}
+
+	function cardDragOver(column_id: string, index: number) {
+		cardDropTarget = {
+			column: column_id,
+			index
+		};
+	}
+
+	function cardDragEnd() {
+		if (!draggingCard || !cardDropTarget) {
+			return;
+		}
+
+		const payload = JSON.stringify({
+			card_id: draggingCard.id,
+			column_id: cardDropTarget.column,
+			order: cardDropTarget.index
+		});
+
+		card_input.value = payload;
+
+		card_reorder_form.requestSubmit();
+
+		draggingCard = null;
+		cardDropTarget = null;
+	}
 </script>
 
 <div class="flex h-full gap-4 overflow-x-auto p-6">
 	{#each sorted_columns as column, index (column._id)}
-		<Column {column} {form} {index} {dragStart} {dragOver} {dragEnd} />
+		<Column
+			{column}
+			{form}
+			{index}
+			{dragStart}
+			{dragOver}
+			{dragEnd}
+			{cardDragStart}
+			{cardDragOver}
+			{cardDragEnd}
+		/>
 	{/each}
 
 	<Dialog.Root bind:open={add_column_dialog_open}>
@@ -139,4 +195,15 @@
 <form method="POST" action="?/reorder_columns" use:enhance bind:this={reorder_form} class="hidden">
 	<input type="hidden" name="board_id" value={form?.board?._id} />
 	<input type="hidden" name="order" bind:value={reorder} />
+</form>
+
+<form
+	method="POST"
+	action="?/reorder_card"
+	use:enhance
+	bind:this={card_reorder_form}
+	class="hidden"
+>
+	<input type="hidden" name="board_id" value={form?.board?._id} />
+	<input type="hidden" name="card" bind:this={card_input} />
 </form>
