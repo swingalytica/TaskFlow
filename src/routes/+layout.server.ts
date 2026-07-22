@@ -1,5 +1,5 @@
 import { authenticate } from '$lib/server/authenticate';
-import { connectToDatabase } from '$lib/server/db';
+import { connectToDatabase } from '$lib/server/mongodb/db';
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 

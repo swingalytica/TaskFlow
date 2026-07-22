@@ -16,8 +16,6 @@ export const load: PageServerLoad = async (event) => {
 			.find({ user: authenticated.id })
 			.populate('organization');
 
-		console.log('memberships', memberships);
-
 		return { memberships: JSON.parse(JSON.stringify(memberships)) };
 	} catch (error) {
 		console.error(error);
