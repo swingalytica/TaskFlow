@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Plus } from '@lucide/svelte';
+	import { MoreVertical, Plus } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -14,7 +15,7 @@
 </script>
 
 <aside class="flex h-full min-h-screen w-64 flex-col border-r border-border bg-card p-4">
-	<div class="mb-4 flex items-center justify-between">
+	<div class="mb-4 flex items-center justify-between border-b-2 border-border">
 		<span class="text-sm font-semibold text-foreground">Projects</span>
 
 		<Dialog.Root bind:open={dialog_open}>
@@ -54,9 +55,21 @@
 
 	<nav class="flex flex-col gap-1">
 		{#each data.projects as project (project._id)}
-			<Button variant="ghost" size="sm" class="justify-start">
-				{project.name}
-			</Button>
+			<div class="border-b-2 border-border py-2">
+				<ContextMenu.Root>
+					<ContextMenu.Trigger class="flex flex-row items-center justify-between">
+						<Button variant="outline" size="sm">
+							{project.name}
+						</Button>
+						<Button variant="secondary" size="sm" disabled>
+							<MoreVertical />
+						</Button>
+					</ContextMenu.Trigger>
+					<ContextMenu.Content>
+						<ContextMenu.Item class="text-destructive">Delete</ContextMenu.Item>
+					</ContextMenu.Content>
+				</ContextMenu.Root>
+			</div>
 		{/each}
 	</nav>
 </aside>

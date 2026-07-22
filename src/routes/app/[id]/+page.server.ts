@@ -1,4 +1,5 @@
 import { authenticate } from '$lib/server/authenticate';
+import { board_model } from '$lib/server/mongodb/models/board';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
 import { project_model } from '$lib/server/mongodb/models/project';
@@ -50,6 +51,16 @@ export const actions: Actions = {
 			const project = await project_model.create({
 				name,
 				organization: params.id
+			});
+
+			await board_model.create({
+				name: 'Main Board',
+				project: project._id,
+				columns: [
+					{ name: 'To Do', order: 0 },
+					{ name: 'In Progress', order: 1 },
+					{ name: 'Done', order: 2 }
+				]
 			});
 
 			return { success: true, project: JSON.parse(JSON.stringify(project)) };
