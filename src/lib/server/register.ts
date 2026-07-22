@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { user_model } from './models';
+import { user_model } from './mongodb/models/user';
 import { email_regex } from './utils';
 
 export async function register_user(email: string, password: string): Promise<{ error: string }> {
@@ -35,7 +35,7 @@ export async function verify_email(email: string): Promise<string> {
 		return 'Email ist erforderlich';
 	}
 
-	if (!email.match(email_regex)) {
+	if (!new RegExp(email_regex).exec(email)) {
 		return 'Bitte geben Sie eine gültige E-Mail-Adresse ein';
 	}
 
