@@ -19,6 +19,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
 	import { Check } from '@lucide/svelte';
+	import Badge from './ui/badge/badge.svelte';
 
 	let {
 		card,
@@ -69,6 +70,13 @@
 		selected_labels = [...card.labels];
 		dialog_open = true;
 	}
+
+	function limit_text_length(text: string, max_length: number) {
+		if (text.length > max_length) {
+			return text.substring(0, max_length) + '...';
+		}
+		return text;
+	}
 </script>
 
 <button
@@ -94,7 +102,25 @@
 			<Check class="h-4 w-4" /> Completed
 		</div>
 	{/if}
-	<span class={card.completed ? 'line-through opacity-50' : ''}>{card.title}</span>
+	<div class="flex flex-col gap-1">
+		<span class={card.completed ? 'line-through opacity-50' : ''}>{card.title}</span>
+		<span class="text-xs text-muted-foreground">{limit_text_length(card.description, 10)}</span>
+		<div class="flex flex-wrap gap-1">
+			{#each card.labels as label}
+				{@const label_data = available_labels_map.get(label)}
+				{#if label_data}
+					<Badge variant="outline" style="background-color: {label_data.color};">
+						{label_data.name}
+					</Badge>
+				{/if}
+			{/each}
+		</div>
+		<div class="mt-2 flex flex-row items-center justify-start gap-2">
+			<Badge variant="destructive">
+				{card.due_date ? new Date(card.due_date).toLocaleDateString() : 'No due date'}
+			</Badge>
+		</div>
+	</div>
 </button>
 
 <Dialog.Root bind:open={dialog_open}>

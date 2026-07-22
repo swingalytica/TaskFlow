@@ -88,8 +88,6 @@ export const actions: Actions = {
 				.populate('user', 'email')
 				.lean();
 
-			console.log(activities);
-
 			return {
 				success: true,
 				board: JSON.parse(JSON.stringify(board)),
@@ -155,11 +153,16 @@ export const actions: Actions = {
 			await board.save();
 
 			const cards = await card_model.find({ board: board_id }).lean();
+			const activities = await activity_model
+				.find({ card: { $in: cards.map((c) => c._id) } })
+				.populate('user', 'email')
+				.lean();
 
 			return {
 				success: true,
 				board: JSON.parse(JSON.stringify(board)),
-				cards: JSON.parse(JSON.stringify(cards))
+				cards: JSON.parse(JSON.stringify(cards)),
+				activities: JSON.parse(JSON.stringify(activities))
 			};
 		} catch (error) {
 			console.error(error);
@@ -199,11 +202,16 @@ export const actions: Actions = {
 			await board.save();
 
 			const cards = await card_model.find({ board: board_id }).lean();
+			const activities = await activity_model
+				.find({ card: { $in: cards.map((c) => c._id) } })
+				.populate('user', 'email')
+				.lean();
 
 			return {
 				success: true,
 				board: JSON.parse(JSON.stringify(board)),
-				cards: JSON.parse(JSON.stringify(cards))
+				cards: JSON.parse(JSON.stringify(cards)),
+				activities: JSON.parse(JSON.stringify(activities))
 			};
 		} catch (error) {
 			console.error(error);
@@ -258,11 +266,16 @@ export const actions: Actions = {
 			}
 
 			const cards = await card_model.find({ board: board_id }).lean();
+			const activities = await activity_model
+				.find({ card: { $in: cards.map((c) => c._id) } })
+				.populate('user', 'email')
+				.lean();
 
 			return {
 				success: true,
 				board: JSON.parse(JSON.stringify(board)),
-				cards: JSON.parse(JSON.stringify(cards))
+				cards: JSON.parse(JSON.stringify(cards)),
+				activities: JSON.parse(JSON.stringify(activities))
 			};
 		} catch (error) {
 			console.error(error);
@@ -321,10 +334,17 @@ export const actions: Actions = {
 
 		await board.save();
 
+		const cards = await card_model.find({ board: board_id }).lean();
+		const activities = await activity_model
+			.find({ card: { $in: cards.map((c) => c._id) } })
+			.populate('user', 'email')
+			.lean();
+
 		return {
 			success: true,
 			board: JSON.parse(JSON.stringify(board)),
-			cards: JSON.parse(JSON.stringify(await card_model.find({ board: board_id }).lean()))
+			cards: JSON.parse(JSON.stringify(cards)),
+			activities: JSON.parse(JSON.stringify(activities))
 		};
 	},
 	add_card: async ({ request, cookies }) => {
@@ -379,10 +399,18 @@ export const actions: Actions = {
 				}
 			});
 
+			const boards = await board_model.findById(board_id).lean();
+			const cards = await card_model.find({ board: board_id }).lean();
+			const activities = await activity_model
+				.find({ card: { $in: cards.map((c) => c._id) } })
+				.populate('user', 'email')
+				.lean();
+
 			return {
 				success: true,
-				board: JSON.parse(JSON.stringify(await board_model.findById(board_id).lean())),
-				cards: JSON.parse(JSON.stringify(await card_model.find({ board: board_id }).lean()))
+				board: JSON.parse(JSON.stringify(boards)),
+				cards: JSON.parse(JSON.stringify(cards)),
+				activities: JSON.parse(JSON.stringify(activities))
 			};
 		} catch (error) {
 			console.error(error);
@@ -405,7 +433,7 @@ export const actions: Actions = {
 
 			const data = await request.formData();
 
-			const board_id = data.get('board_id');
+			const board_id = data.get('board_id') as string;
 			const card = JSON.parse(data.get('card') as string);
 
 			const { card_id, column_id, order } = card;
@@ -452,10 +480,17 @@ export const actions: Actions = {
 				});
 			}
 
+			const cards = await card_model.find({ board: board_id }).lean();
+			const activities = await activity_model
+				.find({ card: { $in: cards.map((c) => c._id) } })
+				.populate('user', 'email')
+				.lean();
+
 			return {
 				success: true,
 				board: JSON.parse(JSON.stringify(board)),
-				cards: JSON.parse(JSON.stringify(await card_model.find({ board: board._id }).lean()))
+				cards: JSON.parse(JSON.stringify(cards)),
+				activities: JSON.parse(JSON.stringify(activities))
 			};
 		} catch (error) {
 			console.error(error);
