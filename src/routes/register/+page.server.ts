@@ -2,7 +2,7 @@ import { register_user } from '$lib/server/register';
 import { fail, type Actions } from '@sveltejs/kit';
 
 export const actions: Actions = {
-	login: async ({ request }) => {
+	register: async ({ request }) => {
 		const data = await request.formData();
 		const email = (data.get('email') as string)?.toLowerCase()?.trim();
 		const password = (data.get('password') as string)?.trim();

@@ -4,22 +4,22 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Field, FieldGroup, FieldLabel } from '$lib/components/ui/field/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import type { ActionData } from '../../routes/$types';
+	import type { ActionData as RegisterActionData } from '../../routes/register/$types';
 
-	const { form }: { form: ActionData } = $props();
+	const { form }: { form: RegisterActionData } = $props();
 
 	const id = $props.id();
 </script>
 
 <Card.Root class="mx-auto w-full max-w-sm">
 	<Card.Header>
-		<Card.Title class="text-2xl">Login</Card.Title>
+		<Card.Title class="text-2xl">Register</Card.Title>
 		<Card.Description
-			>Geben Sie unten Ihre E-Mail-Adresse ein, um sich bei Ihrem Konto anzumelden</Card.Description
+			>Geben Sie unten Ihre E-Mail-Adresse ein, um ein neues Konto zu erstellen</Card.Description
 		>
 	</Card.Header>
 	<Card.Content>
-		<form method="POST" action="?/login" use:enhance>
+		<form method="POST" action="?/register" use:enhance>
 			<FieldGroup>
 				<Field>
 					<FieldLabel for="email-{id}">E-Mail</FieldLabel>
@@ -39,12 +39,12 @@
 					<Input id="password-{id}" name="password" type="password" required />
 				</Field>
 				<Field>
-					<Button type="submit" class="w-full">Login</Button>
+					<Button type="submit" class="w-full">Register</Button>
 				</Field>
 				<Field>
 					{#if form?.user && !('success_message' in form)}
 						<p class="text-sm text-success">
-							Erfolgreich angemeldet als {form.user.email}. Sie können nun fortfahren.
+							Erfolgreich registriert als {form.user.email}. Sie können nun fortfahren.
 						</p>
 					{/if}
 					{#if form?.error}
