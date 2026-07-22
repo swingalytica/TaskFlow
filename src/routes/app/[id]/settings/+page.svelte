@@ -20,6 +20,24 @@
 		'#64748b'
 	];
 
+	let edit_dialog_open = $state(false);
+
+	let edit_label = $state<{
+		_id: string;
+		name: string;
+		color: string;
+	} | null>(null);
+
+	function open_edit_label(label: { _id: any; name: any; color: any }) {
+		edit_label = {
+			_id: label._id,
+			name: label.name,
+			color: label.color
+		};
+
+		edit_dialog_open = true;
+	}
+
 	let name = $state('');
 	let color = $state('#3b82f6');
 </script>
@@ -54,21 +72,17 @@
 
 		<div class="flex flex-col gap-3">
 			{#each data.labels as label}
-				<div class="flex items-center justify-between rounded-md border p-3">
+				<button
+					type="button"
+					class="flex items-center justify-between rounded-md border p-3"
+					onclick={() => open_edit_label(label)}
+				>
 					<div class="flex items-center gap-2">
 						<div class="h-4 w-4 rounded-full" style="background-color: {label.color}"></div>
 
-						<span>
-							{label.name}
-						</span>
+						<span>{label.name}</span>
 					</div>
-
-					<form method="POST" action="?/delete_label" use:enhance>
-						<input type="hidden" name="id" value={label._id} />
-
-						<Button variant="destructive" size="sm" type="submit">Delete</Button>
-					</form>
-				</div>
+				</button>
 			{/each}
 
 			<Button onclick={() => (create_dialog_open = true)}>Create label</Button>
@@ -129,5 +143,58 @@
 
 			<Button type="submit">Create</Button>
 		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={edit_dialog_open}>
+	<Dialog.Content class="sm:max-w-md">
+		<Dialog.Header>
+			<Dialog.Title>Edit label</Dialog.Title>
+		</Dialog.Header>
+
+		{#if edit_label}
+			{@const label = edit_label}
+
+			<form
+				method="POST"
+				action="?/update_label"
+				use:enhance={() => {
+					return async ({ update }) => {
+						await update();
+						edit_dialog_open = false;
+						edit_label = null;
+					};
+				}}
+				class="flex flex-col gap-4"
+			>
+				<input type="hidden" name="id" value={label._id} />
+
+				<Input name="name" bind:value={label.name} required />
+
+				<div class="flex flex-wrap gap-2">
+					{#each color_presets as preset}
+						<button
+							type="button"
+							title={preset}
+							class="h-8 w-8 rounded-full border-2"
+							style="background-color: {preset}; border-color: {label.color === preset
+								? 'white'
+								: 'transparent'}"
+							onclick={() => {
+								label.color = preset;
+							}}
+						></button>
+					{/each}
+				</div>
+
+				<Input name="color" bind:value={label.color} placeholder="#ef4444" required />
+
+				<div class="rounded px-2 py-1 text-xs text-white" style="background-color: {label.color}">
+					{label.name || 'Label'}
+				</div>
+
+				<Button type="submit">Save</Button>
+			</form>
+		{/if}
 	</Dialog.Content>
 </Dialog.Root>
