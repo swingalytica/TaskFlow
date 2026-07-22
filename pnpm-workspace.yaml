@@ -1,6 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
 allowBuilds:
   bcrypt: true
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
+  - "@tailwindcss/oxide"
   - bcrypt
   - esbuild
