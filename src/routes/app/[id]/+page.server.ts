@@ -4,6 +4,7 @@ import { card_model } from '$lib/server/mongodb/models/card';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
 import { project_model } from '$lib/server/mongodb/models/project';
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -236,5 +237,63 @@ export const actions: Actions = {
 			console.error(error);
 			return { success: false, error: 'Something went wrong' };
 		}
+	},
+	reorder_columns: async ({ request }) => {
+		const data = await request.formData();
+
+		const board_id = data.get('board_id');
+		const order = data.get('order');
+
+		if (typeof board_id !== 'string' || typeof order !== 'string') {
+			return fail(400, {
+				error: 'Invalid data'
+			});
+		}
+
+		let reordered_columns;
+
+		try {
+			reordered_columns = JSON.parse(order);
+		} catch {
+			return fail(400, {
+				error: 'Invalid JSON'
+			});
+		}
+
+		if (!Array.isArray(reordered_columns)) {
+			return fail(400, {
+				error: 'Invalid order format'
+			});
+		}
+
+		const board = await board_model.findById(board_id);
+
+		if (!board) {
+			return fail(404, {
+				error: 'Board not found'
+			});
+		}
+
+		const column_order_map = new Map(reordered_columns.map((column) => [column.id, column.order]));
+
+		board.columns.forEach((column) => {
+			const new_order = column_order_map.get(column._id.toString());
+
+			if (typeof new_order === 'number') {
+				column.order = new_order;
+			}
+		});
+
+		board.columns.sort((a, b) => a.order - b.order);
+
+		board.markModified('columns');
+
+		await board.save();
+
+		return {
+			success: true,
+			board: JSON.parse(JSON.stringify(board)),
+			cards: JSON.parse(JSON.stringify(await card_model.find({ board: board_id }).lean()))
+		};
 	}
 };

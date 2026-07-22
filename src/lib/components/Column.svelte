@@ -10,7 +10,21 @@
 	import type { ColumnType } from './Board.svelte';
 	import Card from './Card.svelte';
 
-	let { column, form }: { column: ColumnType; form: ActionData } = $props();
+	let {
+		column,
+		form,
+		index,
+		dragStart,
+		dragOver,
+		dragEnd
+	}: {
+		column: ColumnType;
+		form: ActionData;
+		index: number;
+		dragStart: (index: number) => void;
+		dragOver: (event: DragEvent, index: number) => void;
+		dragEnd: () => void;
+	} = $props();
 
 	function cards_for_column(column_id: string) {
 		return form?.cards
@@ -25,18 +39,35 @@
 </script>
 
 <div class="flex w-72 shrink-0 flex-col rounded-lg bg-card">
-	<div class="flex items-center justify-between px-3 py-2">
-		<span class="text-sm font-medium text-foreground">{column.name}</span>
+	<div
+		class="flex cursor-grab items-center justify-between px-3 py-2 active:cursor-grabbing"
+		role="button"
+		tabindex="0"
+		draggable="true"
+		ondragstart={() => dragStart(index)}
+		ondragover={(event) => dragOver(event, index)}
+		ondragend={dragEnd}
+	>
+		<span class="text-sm font-medium text-foreground">
+			{column.name}
+		</span>
 
 		<div class="flex items-center gap-1">
-			<span class="text-xs text-muted-foreground">{cards_for_column(column._id).length}</span>
+			<span class="text-xs text-muted-foreground">
+				{cards_for_column(column._id).length}
+			</span>
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger
-					class={buttonVariants({ variant: 'ghost', size: 'icon', class: 'h-6 w-6' })}
+					class={buttonVariants({
+						variant: 'ghost',
+						size: 'icon',
+						class: 'h-6 w-6'
+					})}
 				>
 					<MoreVertical class="h-4 w-4" />
 				</DropdownMenu.Trigger>
+
 				<DropdownMenu.Content>
 					<DropdownMenu.Item
 						onSelect={() => {
@@ -46,6 +77,7 @@
 					>
 						Rename column
 					</DropdownMenu.Item>
+
 					<DropdownMenu.Item
 						class="text-destructive"
 						onSelect={() => delete_form_element.requestSubmit()}
@@ -104,6 +136,7 @@
 
 			<div class="flex flex-col gap-1.5">
 				<Label for="rename-{column._id}">Name</Label>
+
 				<Input id="rename-{column._id}" name="name" bind:value={rename_value} required />
 			</div>
 

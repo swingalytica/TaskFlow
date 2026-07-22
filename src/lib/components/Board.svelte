@@ -18,24 +18,85 @@
 
 	let { form }: { form: ActionData } = $props();
 
-	const sorted_columns: ColumnType[] = $derived(
+	let sorted_columns = $state<ColumnType[]>(
 		[...(form?.board?.columns ?? [])].sort((a, b) => a.order - b.order)
 	);
 
+	let initialized = false;
+
+	$effect(() => {
+		if (!initialized) {
+			sorted_columns = [...(form?.board?.columns ?? [])].sort((a, b) => a.order - b.order);
+
+			initialized = true;
+		}
+	});
+
 	let add_column_dialog_open = $state(false);
 	let new_column_name = $state('');
+
+	let draggingIndex = -1;
+
+	function dragStart(index: number) {
+		draggingIndex = index;
+	}
+
+	function dragOver(event: DragEvent, index: number) {
+		event.preventDefault();
+
+		if (draggingIndex === -1 || index === draggingIndex) {
+			return;
+		}
+
+		const columns = [...sorted_columns];
+
+		const [moved] = columns.splice(draggingIndex, 1);
+
+		if (!moved) {
+			return;
+		}
+
+		columns.splice(index, 0, moved);
+
+		sorted_columns = columns;
+		draggingIndex = index;
+	}
+
+	let reorder_form: HTMLFormElement;
+	let reorder = $state('');
+
+	async function dragEnd() {
+		draggingIndex = -1;
+
+		reorder = JSON.stringify(
+			sorted_columns.map((column, order) => ({
+				id: column._id,
+				order
+			}))
+		);
+
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		reorder_form.requestSubmit();
+	}
 </script>
 
 <div class="flex h-full gap-4 overflow-x-auto p-6">
-	{#each sorted_columns as column (column._id)}
-		<Column {column} {form} />
+	{#each sorted_columns as column, index (column._id)}
+		<Column {column} {form} {index} {dragStart} {dragOver} {dragEnd} />
 	{/each}
 
 	<Dialog.Root bind:open={add_column_dialog_open}>
-		<Dialog.Trigger class={buttonVariants({ variant: 'outline', class: 'h-fit w-72 shrink-0' })}>
+		<Dialog.Trigger
+			class={buttonVariants({
+				variant: 'outline',
+				class: 'h-fit w-72 shrink-0'
+			})}
+		>
 			<Plus class="h-4 w-4" />
 			Add column
 		</Dialog.Trigger>
+
 		<Dialog.Content class="sm:max-w-106.25">
 			<Dialog.Header>
 				<Dialog.Title>New column</Dialog.Title>
@@ -57,6 +118,7 @@
 
 				<div class="flex flex-col gap-1.5">
 					<Label for="name">Name</Label>
+
 					<Input
 						id="name"
 						name="name"
@@ -73,3 +135,8 @@
 		</Dialog.Content>
 	</Dialog.Root>
 </div>
+
+<form method="POST" action="?/reorder_columns" use:enhance bind:this={reorder_form} class="hidden">
+	<input type="hidden" name="board_id" value={form?.board?._id} />
+	<input type="hidden" name="order" bind:value={reorder} />
+</form>
