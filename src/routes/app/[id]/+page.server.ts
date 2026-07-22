@@ -6,6 +6,7 @@ import { label_model } from '$lib/server/mongodb/models/label';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
 import { project_model } from '$lib/server/mongodb/models/project';
+import '$lib/server/mongodb/models/user';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -84,7 +85,7 @@ export const actions: Actions = {
 			const cards = await card_model.find({ board: board?._id }).lean();
 			const activities = await activity_model
 				.find({ card: { $in: cards.map((c) => c._id) } })
-				.populate('user')
+				.populate('user', 'email')
 				.lean();
 
 			console.log(activities);
@@ -109,6 +110,15 @@ export const actions: Actions = {
 			await board_model.deleteMany({ project: project_id });
 			await card_model.deleteMany({
 				board: { $in: (await board_model.find({ project: project_id })).map((b) => b._id) }
+			});
+			await activity_model.deleteMany({
+				card: {
+					$in: (
+						await card_model.find({
+							board: { $in: (await board_model.find({ project: project_id })).map((b) => b._id) }
+						})
+					).map((c) => c._id)
+				}
 			});
 
 			return { success: true };
@@ -235,6 +245,16 @@ export const actions: Actions = {
 				);
 			} else {
 				await card_model.deleteMany({ board: board_id, column: column_id });
+				await activity_model.deleteMany({
+					card: {
+						$in: (
+							await card_model.find({
+								board: board_id,
+								column: column_id
+							})
+						).map((c) => c._id)
+					}
+				});
 			}
 
 			const cards = await card_model.find({ board: board_id }).lean();
@@ -480,11 +500,16 @@ export const actions: Actions = {
 
 			const board = await board_model.findById({ _id: board_id }).lean();
 			const cards = await card_model.find({ board: board_id }).lean();
+			const activities = await activity_model
+				.find({ card: { $in: cards.map((c) => c._id) } })
+				.populate('user', 'email')
+				.lean();
 
 			return {
 				success: true,
 				board: JSON.parse(JSON.stringify(board)),
-				cards: JSON.parse(JSON.stringify(cards))
+				cards: JSON.parse(JSON.stringify(cards)),
+				activities: JSON.parse(JSON.stringify(activities))
 			};
 		} catch (error) {
 			console.error(error);
@@ -510,8 +535,6 @@ export const actions: Actions = {
 			const card_id = data.get('card_id') as string;
 			const completed = data.get('completed') === 'true';
 			const board_id = data.get('board_id') as string;
-
-			console.log({ card_id, completed, board_id });
 
 			if (!card_id) {
 				return fail(400, {
@@ -544,11 +567,16 @@ export const actions: Actions = {
 
 			const board = await board_model.findById({ _id: board_id }).lean();
 			const cards = await card_model.find({ board: board_id }).lean();
+			const activities = await activity_model
+				.find({ card: { $in: cards.map((c) => c._id) } })
+				.populate('user', 'email')
+				.lean();
 
 			return {
 				success: true,
 				board: JSON.parse(JSON.stringify(board)),
-				cards: JSON.parse(JSON.stringify(cards))
+				cards: JSON.parse(JSON.stringify(cards)),
+				activities: JSON.parse(JSON.stringify(activities))
 			};
 		} catch (error) {
 			console.error(error);

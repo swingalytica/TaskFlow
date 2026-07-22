@@ -42,7 +42,9 @@
 		activities: {
 			_id: string;
 			card: string;
-			user: string;
+			user: {
+				email: string;
+			};
 			type: string;
 			data: any;
 			createdAt: string;
@@ -50,8 +52,6 @@
 		cardDragStart: (card_id: string, column_id: string, index: number) => void;
 		cardDragEnd: (card_id: string, column_id: string, order: number) => void;
 	} = $props();
-
-	console.log(activities);
 
 	let dialog_open = $state(false);
 	let title = $derived(card.title);
@@ -188,12 +188,12 @@
 				<div class="flex flex-col gap-2">
 					<Label>Activity</Label>
 
-					{#if activities.length > 0}
+					{#if activities && activities.length > 0}
 						<div class="flex flex-col gap-2">
 							{#each activities as activity (activity._id)}
 								<div class="rounded-md border border-border p-3 text-sm">
 									<p>
-										<strong>{activity.user}</strong>
+										<strong>{activity.user.email}</strong>
 										{activity.type}
 									</p>
 									<p class="text-xs text-muted-foreground">
