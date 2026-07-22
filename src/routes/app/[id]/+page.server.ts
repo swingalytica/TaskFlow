@@ -104,5 +104,137 @@ export const actions: Actions = {
 			console.log(error);
 			return { success: false };
 		}
+	},
+	add_column: async (event) => {
+		try {
+			const authenticated = authenticate(event.cookies);
+
+			if (!authenticated) {
+				return { success: false, error: 'Not authenticated' };
+			}
+
+			const form_data = await event.request.formData();
+			const board_id = form_data.get('board_id') as string;
+			const name = (form_data.get('name') as string)?.trim();
+
+			if (!board_id || !name) {
+				return { success: false, error: 'board_id and name are required' };
+			}
+
+			const board = await board_model.findById(board_id);
+
+			if (!board) {
+				return { success: false, error: 'Board not found' };
+			}
+
+			const max_order = board.columns.reduce((max, col) => Math.max(max, col.order), -1);
+
+			board.columns.push({ name, order: max_order + 1 });
+			await board.save();
+
+			const cards = await card_model.find({ board: board_id }).lean();
+
+			return {
+				success: true,
+				board: JSON.parse(JSON.stringify(board)),
+				cards: JSON.parse(JSON.stringify(cards))
+			};
+		} catch (error) {
+			console.error(error);
+			return { success: false, error: 'Something went wrong' };
+		}
+	},
+	rename_column: async (event) => {
+		try {
+			const authenticated = authenticate(event.cookies);
+
+			if (!authenticated) {
+				return { success: false, error: 'Not authenticated' };
+			}
+
+			const form_data = await event.request.formData();
+			const board_id = form_data.get('board_id') as string;
+			const column_id = form_data.get('column_id') as string;
+			const name = (form_data.get('name') as string)?.trim();
+
+			if (!board_id || !column_id || !name) {
+				return { success: false, error: 'board_id, column_id and name are required' };
+			}
+
+			const board = await board_model.findById(board_id);
+
+			if (!board) {
+				return { success: false, error: 'Board not found' };
+			}
+
+			const column = board.columns.id(column_id);
+
+			if (!column) {
+				return { success: false, error: 'Column not found' };
+			}
+
+			column.name = name;
+			await board.save();
+
+			const cards = await card_model.find({ board: board_id }).lean();
+
+			return {
+				success: true,
+				board: JSON.parse(JSON.stringify(board)),
+				cards: JSON.parse(JSON.stringify(cards))
+			};
+		} catch (error) {
+			console.error(error);
+			return { success: false, error: 'Something went wrong' };
+		}
+	},
+	delete_column: async (event) => {
+		try {
+			const authenticated = authenticate(event.cookies);
+
+			if (!authenticated) {
+				return { success: false, error: 'Not authenticated' };
+			}
+
+			const form_data = await event.request.formData();
+			const board_id = form_data.get('board_id') as string;
+			const column_id = form_data.get('column_id') as string;
+
+			if (!board_id || !column_id) {
+				return { success: false, error: 'board_id and column_id are required' };
+			}
+
+			const board = await board_model.findById(board_id);
+
+			if (!board) {
+				return { success: false, error: 'Board not found' };
+			}
+
+			board.columns.pull(column_id);
+			await board.save();
+
+			const remaining_columns = [...board.columns].sort((a, b) => a.order - b.order);
+
+			if (remaining_columns.length > 0) {
+				const fallback_column_id = remaining_columns[0]._id;
+				await card_model.updateMany(
+					{ board: board_id, column: column_id },
+					{ column: fallback_column_id }
+				);
+			} else {
+				await card_model.deleteMany({ board: board_id, column: column_id });
+			}
+
+			const cards = await card_model.find({ board: board_id }).lean();
+
+			return {
+				success: true,
+				board: JSON.parse(JSON.stringify(board)),
+				cards: JSON.parse(JSON.stringify(cards))
+			};
+		} catch (error) {
+			console.error(error);
+			return { success: false, error: 'Something went wrong' };
+		}
 	}
 };

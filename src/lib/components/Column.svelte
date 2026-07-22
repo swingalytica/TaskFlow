@@ -1,17 +1,27 @@
 <script lang="ts">
-	import { buttonVariants } from '$lib/components/ui/button';
+	import { enhance } from '$app/forms';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import { MoreVertical, Plus } from '@lucide/svelte';
 	import type { ActionData } from '../../routes/app/[id]/$types';
 	import type { ColumnType } from './Board.svelte';
 	import Card from './Card.svelte';
 
 	let { column, form }: { column: ColumnType; form: ActionData } = $props();
+
 	function cards_for_column(column_id: string) {
 		return form?.cards
 			.filter((card: { column: string }) => card.column === column_id)
 			.sort((a: { order: number }, b: { order: number }) => a.order - b.order);
 	}
+
+	let rename_dialog_open = $state(false);
+	let rename_value = $derived(column.name);
+
+	let delete_form_element: HTMLFormElement;
 </script>
 
 <div class="flex w-72 shrink-0 flex-col rounded-lg bg-card">
@@ -28,8 +38,20 @@
 					<MoreVertical class="h-4 w-4" />
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content>
-					<DropdownMenu.Item>Rename column</DropdownMenu.Item>
-					<DropdownMenu.Item class="text-destructive">Delete column</DropdownMenu.Item>
+					<DropdownMenu.Item
+						onSelect={() => {
+							rename_value = column.name;
+							rename_dialog_open = true;
+						}}
+					>
+						Rename column
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						class="text-destructive"
+						onSelect={() => delete_form_element.requestSubmit()}
+					>
+						Delete column
+					</DropdownMenu.Item>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
 		</div>
@@ -48,3 +70,46 @@
 		</button>
 	</div>
 </div>
+
+<form
+	method="POST"
+	action="?/delete_column"
+	bind:this={delete_form_element}
+	use:enhance
+	class="hidden"
+>
+	<input type="hidden" name="board_id" value={form?.board?._id} />
+	<input type="hidden" name="column_id" value={column._id} />
+</form>
+
+<Dialog.Root bind:open={rename_dialog_open}>
+	<Dialog.Content class="sm:max-w-106.25">
+		<Dialog.Header>
+			<Dialog.Title>Rename column</Dialog.Title>
+		</Dialog.Header>
+
+		<form
+			method="POST"
+			action="?/rename_column"
+			class="flex flex-col gap-4"
+			use:enhance={() => {
+				return async ({ update }) => {
+					await update();
+					rename_dialog_open = false;
+				};
+			}}
+		>
+			<input type="hidden" name="board_id" value={form?.board?._id} />
+			<input type="hidden" name="column_id" value={column._id} />
+
+			<div class="flex flex-col gap-1.5">
+				<Label for="rename-{column._id}">Name</Label>
+				<Input id="rename-{column._id}" name="name" bind:value={rename_value} required />
+			</div>
+
+			<Dialog.Footer>
+				<Button type="submit">Save</Button>
+			</Dialog.Footer>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
