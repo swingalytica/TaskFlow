@@ -1,29 +1,48 @@
 import mongoose from 'mongoose';
 
-const card_schema = new mongoose.Schema({
-	title: {
-		type: String,
-		required: true
-	},
+const card_schema = new mongoose.Schema(
+	{
+		title: {
+			type: String,
+			required: true
+		},
 
-	board: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'Board',
-		required: true
-	},
+		description: {
+			type: String,
+			default: ''
+		},
 
-	column: {
-		type: mongoose.Schema.Types.ObjectId,
-		required: true
-	},
-
-	labels: [
-		{
+		board: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Label'
+			ref: 'Board',
+			required: true
+		},
+
+		column: {
+			type: mongoose.Schema.Types.ObjectId,
+			required: true
+		},
+
+		order: {
+			type: Number,
+			required: true
+		},
+
+		labels: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Label'
+			}
+		],
+
+		due_date: {
+			type: Date
 		}
-	]
-});
+	},
+	{
+		timestamps: true
+	}
+);
 
 card_schema.index({
 	board: 1,

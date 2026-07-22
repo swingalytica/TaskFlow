@@ -382,5 +382,22 @@ export const actions: Actions = {
 				error: 'Internal Server Error'
 			});
 		}
+	},
+	save_card: async ({ request }) => {
+		try {
+			const data = await request.formData();
+
+			const card_id = data.get('card_id') as string;
+			const title = data.get('title') as string;
+			const description = data.get('description') as string;
+			const due_date = data.get('due_date') as string;
+
+			console.log({ card_id, title, description, due_date });
+		} catch (error) {
+			console.error(error);
+			return fail(500, {
+				error: 'Internal Server Error'
+			});
+		}
 	}
 };
