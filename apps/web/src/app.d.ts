@@ -10,6 +10,8 @@ declare global {
 
 		interface Auth {
 			id: string;
+			name: string;
+			email: string;
 		}
 	}
 }

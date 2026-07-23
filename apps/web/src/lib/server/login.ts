@@ -45,5 +45,5 @@ async function get_user(email: string, password: string): Promise<{ error: strin
 
 	const id = user._id.toString();
 
-	return { id, email: user.email };
+	return { id, name: user.name, email: user.email };
 }
