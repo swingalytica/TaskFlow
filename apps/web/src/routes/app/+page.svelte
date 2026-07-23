@@ -5,9 +5,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import type { PageData } from './$types';
+	import { toast } from 'svelte-sonner';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let name = $state('');
 	let logo_url = $state('');
@@ -24,6 +25,12 @@
 			.toUpperCase();
 		return initials;
 	}
+
+	$effect(() => {
+		if (form && form.error) {
+			toast.error(form.error, { duration: 5000 });
+		}
+	});
 </script>
 
 <svelte:head>

@@ -61,7 +61,6 @@ export const actions: Actions = {
 			return { error: 'Failed to create organization' };
 		}
 	},
-
 	accept_invite: async ({ request, cookies }) => {
 		const authenticated = authenticate(cookies);
 
@@ -80,6 +79,17 @@ export const actions: Actions = {
 
 		if (!invite) {
 			return { error: 'Invite not found' };
+		}
+
+		const existing_membership = await membership_model.findOne({
+			user: authenticated.id,
+			organization: invite.organization
+		});
+
+		if (existing_membership) {
+			await invite_model.deleteOne({ _id: invite_id });
+
+			return { error: 'You are already a member of this organization' };
 		}
 
 		try {
