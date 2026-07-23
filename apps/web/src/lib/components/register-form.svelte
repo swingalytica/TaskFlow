@@ -27,7 +27,7 @@
 						id="email-{id}"
 						name="email"
 						type="email"
-						placeholder="v.nachname@hammer.partners"
+						placeholder="youremail@example.com"
 						value={form?.user?.email ?? ''}
 						required
 					/>
@@ -38,14 +38,14 @@
 						id="name-{id}"
 						name="name"
 						type="text"
-						placeholder="Vorname Nachname"
+						placeholder="Firstname Lastname"
 						value={form?.user?.name ?? ''}
 						required
 					/>
 				</Field>
 				<Field>
 					<div class="flex items-center">
-						<FieldLabel for="password-{id}">Passwort</FieldLabel>
+						<FieldLabel for="password-{id}">Password</FieldLabel>
 					</div>
 					<Input id="password-{id}" name="password" type="password" required />
 				</Field>
@@ -55,7 +55,7 @@
 				<Field>
 					{#if form?.user && !('success_message' in form)}
 						<p class="text-sm text-success">
-							Erfolgreich registriert als {form.user.email}. Sie können nun fortfahren.
+							Successfully registered as {form.user.email}. You can now proceed.
 						</p>
 					{/if}
 					{#if form?.error}

@@ -15,7 +15,7 @@ export const actions: Actions = {
 		if (error) {
 			return fail(400, { error });
 		} else {
-			const success_message = 'Registrierung erfolgreich! Sie können sich jetzt anmelden.';
+			const success_message = 'Successfully registered! You can now log in.';
 			return { success_message, user };
 		}
 	}
