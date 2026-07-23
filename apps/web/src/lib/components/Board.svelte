@@ -12,11 +12,12 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import type { Filter } from '$lib/types/filter';
 	import { Plus } from '@lucide/svelte';
-	import type { ActionData, PageData } from '../../routes/app/[id]/[project_id]/$types';
+	import type { PageData } from '../../routes/app/[id]/[project_id]/$types';
 	import Column from './column.svelte';
 
-	let { form, data }: { form: ActionData; data: PageData } = $props();
+	let { data, filters = $bindable() }: { data: PageData; filters: Filter } = $props();
 
 	let sorted_columns = $state<ColumnType[]>([]);
 

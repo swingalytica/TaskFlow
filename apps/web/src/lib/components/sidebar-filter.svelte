@@ -3,9 +3,10 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
 	import { Separator } from '$lib/components/ui/separator';
+	import type { Filter } from '$lib/types/filter';
 	import type { PageData } from '../../routes/app/[id]/[project_id]/$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, filters = $bindable() }: { data: PageData; filters: Filter } = $props();
 
 	let selected_assignee = $state<string | undefined>();
 	let show_completed = $state(true);
@@ -22,7 +23,7 @@
 		<div class="flex flex-col gap-2">
 			<Label class="text-xs font-semibold text-muted-foreground uppercase">Assignee</Label>
 
-			<Select.Root type="single" bind:value={selected_assignee}>
+			<Select.Root type="single" bind:value={filters.assignee}>
 				<Select.Trigger>
 					{#if selected_assignee}
 						{data.members.find(
