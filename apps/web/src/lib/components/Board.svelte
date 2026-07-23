@@ -14,7 +14,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Plus } from '@lucide/svelte';
 	import type { ActionData, PageData } from '../../routes/app/[id]/[project_id]/$types';
-	import Column from './Column.svelte';
+	import Column from './column.svelte';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 

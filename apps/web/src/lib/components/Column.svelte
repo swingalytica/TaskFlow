@@ -7,8 +7,8 @@
 	import { Label } from '$lib/components/ui/label';
 	import { MoreVertical, Plus } from '@lucide/svelte';
 	import type { PageData } from '../../routes/app/[id]/[project_id]/$types';
-	import type { ColumnType } from './Board.svelte';
-	import Card, { type CardType } from './Card.svelte';
+	import type { ColumnType } from './board.svelte';
+	import Card, { type CardType } from './card.svelte';
 
 	let {
 		column,

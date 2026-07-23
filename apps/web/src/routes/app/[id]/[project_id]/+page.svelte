@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Board from '$lib/components/Board.svelte';
-	import Sidebar from '$lib/components/Sidebar.svelte';
+	import Board from '$lib/components/board.svelte';
+	import Sidebar from '$lib/components/sidebar-right.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
