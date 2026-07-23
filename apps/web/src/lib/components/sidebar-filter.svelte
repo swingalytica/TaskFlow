@@ -5,6 +5,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import type { Filter } from '$lib/types/filter';
 	import type { PageData } from '../../routes/app/[id]/[project_id]/$types';
+	import { Badge } from './ui/badge';
 	import { Button } from './ui/button';
 
 	let { data, filters = $bindable() }: { data: PageData; filters: Filter } = $props();
@@ -70,10 +71,16 @@
 		<div class="flex flex-col gap-3">
 			<Label class="text-xs font-semibold text-muted-foreground uppercase">Labels</Label>
 
-			<div class="flex flex-col gap-2">
+			<div class="flex flex-wrap gap-2">
 				{#each data.labels as label (label._id)}
-					<div class="flex items-center gap-2">
+					<Badge
+						class="flex cursor-pointer items-center gap-2"
+						style={`background-color: ${label.color}${
+							filters?.labels?.includes(label._id) ? '' : '80'
+						};`}
+					>
 						<Checkbox
+							hidden
 							id={label._id}
 							checked={filters?.labels?.includes(label._id)}
 							onCheckedChange={(checked) => {
@@ -88,7 +95,7 @@
 						<Label for={label._id}>
 							{label.name}
 						</Label>
-					</div>
+					</Badge>
 				{/each}
 			</div>
 		</div>
