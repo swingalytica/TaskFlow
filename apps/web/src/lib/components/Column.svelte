@@ -73,7 +73,7 @@
 
 				// Labels
 				if (filters.labels && filters.labels.length > 0) {
-					const has_label = filters.labels.some((label) => card.labels.includes(label));
+					const has_label = filters.labels.every((label) => card.labels.includes(label));
 
 					if (!has_label) {
 						return false;
