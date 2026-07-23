@@ -5,9 +5,10 @@
 		description: string;
 		column: string;
 		order: number;
-		labels: [string];
+		labels: string[];
 		due_date?: string;
 		completed: boolean;
+		assignee?: string;
 	};
 </script>
 
@@ -126,18 +127,23 @@
 <Dialog.Root bind:open={dialog_open}>
 	<Dialog.Content class="max-h-[90vh] overflow-y-auto sm:max-w-xl">
 		<Dialog.Header class="mb-4 flex gap-4">
-			{#if !card.completed}
-				<form action="?/mark_card_completed" method="POST" use:enhance>
-					<div class="flex w-max flex-row items-center justify-start gap-1">
-						<Button type="submit" variant="outline">
-							<Check class="h-4 w-4" />
-							Complete Task
-						</Button>
-					</div>
-					<input type="hidden" name="card_id" value={card._id} hidden />
-					<input type="hidden" name="completed" value="true" hidden />
-				</form>
-			{/if}
+			<div class="flex flex-row gap-2">
+				{#if !card.completed}
+					<form action="?/mark_card_completed" method="POST" use:enhance>
+						<div class="flex w-max flex-row items-center justify-start gap-1">
+							<Button type="submit" variant="outline">
+								<Check class="h-4 w-4" />
+								Complete Task
+							</Button>
+						</div>
+						<input type="hidden" name="card_id" value={card._id} hidden />
+						<input type="hidden" name="completed" value="true" hidden />
+					</form>
+				{/if}
+				<Select.Root type="single" name="assignee" disabled={card.completed}>
+					<Select.Trigger>{card.assignee ?? 'Unassigned'}</Select.Trigger>
+				</Select.Root>
+			</div>
 		</Dialog.Header>
 
 		<form action="?/save_card" method="POST" use:enhance>
