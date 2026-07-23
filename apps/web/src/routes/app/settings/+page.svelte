@@ -1,18 +1,37 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { shorten_user_name } from '$lib/utils';
+	import { toast } from 'svelte-sonner';
+	import type { ActionData, PageData } from './$types';
 
-	let { data } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let name = $state('');
 	let avatar = $state('');
 	let email = $state('');
 
-	let theme = $state('system');
+	$effect(() => {
+		name = data?.user?.name ?? '';
+		avatar = data?.user?.avatar ?? '';
+		email = data?.user?.email ?? '';
+
+		console.log(form);
+
+		if (form?.error) {
+			toast.error(form.error, {
+				duration: 4000
+			});
+		} else if (form?.message) {
+			toast.success('Profile updated successfully!', {
+				duration: 4000
+			});
+		}
+	});
 </script>
 
 <div class="mx-auto flex w-full max-w-3xl flex-col gap-8 p-6">
@@ -29,7 +48,7 @@
 		</Card.Header>
 
 		<Card.Content>
-			<form method="POST" action="?/update_profile" class="flex flex-col gap-5">
+			<form method="POST" action="?/update_profile" class="flex flex-col gap-5" use:enhance>
 				<div class="flex flex-col gap-2">
 					<Label for="name">Name</Label>
 					<Input id="name" name="name" bind:value={name} placeholder="Your name" />
