@@ -20,13 +20,9 @@
 
 	let sorted_columns = $state<ColumnType[]>([]);
 
-	let initialized = false;
-
 	$effect(() => {
-		if (!initialized) {
+		if (draggingIndex === -1) {
 			sorted_columns = [...(data?.board?.columns ?? [])].sort((a, b) => a.order - b.order);
-
-			initialized = true;
 		}
 	});
 
