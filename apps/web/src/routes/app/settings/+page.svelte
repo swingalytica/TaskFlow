@@ -3,6 +3,7 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { shorten_user_name } from '$lib/utils';
@@ -14,6 +15,7 @@
 	let name = $state('');
 	let avatar = $state('');
 	let email = $state('');
+	let password_dialog_open = $state(false);
 
 	$effect(() => {
 		name = data?.user?.name ?? '';
@@ -89,15 +91,52 @@
 		</Card.Header>
 
 		<Card.Content>
-			<div class="flex flex-col gap-4">
+			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-sm font-medium">Password</p>
 					<p class="text-sm text-muted-foreground">
-						Update your password regularly to keep your account secure.
+						Update your password to keep your account secure.
 					</p>
 				</div>
 
-				<Button variant="outline" class="w-fit">Change password</Button>
+				<Dialog.Root bind:open={password_dialog_open}>
+					<Dialog.Trigger>
+						<Button variant="outline">Change password</Button>
+					</Dialog.Trigger>
+
+					<Dialog.Content class="sm:max-w-md">
+						<Dialog.Header>
+							<Dialog.Title>Change password</Dialog.Title>
+							<Dialog.Description>
+								Enter your current password and choose a new one.
+							</Dialog.Description>
+						</Dialog.Header>
+
+						<form method="POST" action="?/change_password" class="flex flex-col gap-4">
+							<div class="flex flex-col gap-2">
+								<Label for="current_password">Current password</Label>
+
+								<Input id="current_password" name="current_password" type="password" required />
+							</div>
+
+							<div class="flex flex-col gap-2">
+								<Label for="new_password">New password</Label>
+
+								<Input id="new_password" name="new_password" type="password" required />
+							</div>
+
+							<div class="flex flex-col gap-2">
+								<Label for="confirm_password">Confirm new password</Label>
+
+								<Input id="confirm_password" name="confirm_password" type="password" required />
+							</div>
+
+							<Dialog.Footer>
+								<Button type="submit">Update password</Button>
+							</Dialog.Footer>
+						</form>
+					</Dialog.Content>
+				</Dialog.Root>
 			</div>
 		</Card.Content>
 	</Card.Root>
