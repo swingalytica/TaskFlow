@@ -232,17 +232,8 @@ export const actions: Actions = {
 
 		await board.save();
 
-		const cards = await card_model.find({ board: board_id }).lean();
-		const activities = await activity_model
-			.find({ card: { $in: cards.map((c) => c._id) } })
-			.populate('user', 'email')
-			.lean();
-
 		return {
-			success: true,
-			board: JSON.parse(JSON.stringify(board)),
-			cards: JSON.parse(JSON.stringify(cards)),
-			activities: JSON.parse(JSON.stringify(activities))
+			success: true
 		};
 	},
 	add_card: async ({ request, cookies }) => {
@@ -297,16 +288,8 @@ export const actions: Actions = {
 				}
 			});
 
-			const cards = await card_model.find({ board: board_id }).lean();
-			const activities = await activity_model
-				.find({ card: { $in: cards.map((c) => c._id) } })
-				.populate('user', 'email')
-				.lean();
-
 			return {
-				success: true,
-				cards: JSON.parse(JSON.stringify(cards)),
-				activities: JSON.parse(JSON.stringify(activities))
+				success: true
 			};
 		} catch (error) {
 			console.error(error);
