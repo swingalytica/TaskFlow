@@ -324,7 +324,6 @@ export const actions: Actions = {
 				}
 			});
 
-			const boards = await board_model.findById(board_id).lean();
 			const cards = await card_model.find({ board: board_id }).lean();
 			const activities = await activity_model
 				.find({ card: { $in: cards.map((c) => c._id) } })
@@ -333,7 +332,6 @@ export const actions: Actions = {
 
 			return {
 				success: true,
-				board: JSON.parse(JSON.stringify(boards)),
 				cards: JSON.parse(JSON.stringify(cards)),
 				activities: JSON.parse(JSON.stringify(activities))
 			};

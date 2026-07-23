@@ -31,7 +31,7 @@ async function get_user(email: string, password: string): Promise<{ error: strin
 		return { error: 'Passwort ist erforderlich' };
 	}
 
-	const user = await user_model.findOne({ email });
+	const user = await user_model.findOne({ email }).select('+password');
 
 	if (!user) {
 		return { error: 'E-Mail oder Passwort ist ungültig' };
