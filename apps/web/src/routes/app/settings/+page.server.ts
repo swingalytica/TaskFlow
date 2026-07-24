@@ -1,116 +1,150 @@
 import { authenticate } from '$lib/server/authenticate';
-import { label_model } from '$lib/server/mongodb/models/label';
-import { membership_model, OrganizationRole } from '$lib/server/mongodb/models/membership';
-import { fail } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import { user_model } from '$lib/server/mongodb/models/user';
+import { verify_name } from '$lib/server/register';
+import { type Actions } from '@sveltejs/kit';
+import bcrypt from 'bcrypt';
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
-	const auth = authenticate(event.cookies);
+	try {
+		const authenticated = authenticate(event.cookies);
 
-	if (!auth) {
+		if (!authenticated) {
+			return {
+				status: 401,
+				error: new Error('Unauthorized')
+			};
+		}
+
+		const user = await user_model.findById(authenticated.id);
+
+		if (!user) {
+			return {
+				status: 404,
+				error: new Error('User not found')
+			};
+		}
+
 		return {
-			status: 401,
-			error: new Error('Unauthorized')
+			user: {
+				id: user.id,
+				name: user.name,
+				email: user.email,
+				avatar: user.avatar
+			}
 		};
+	} catch (error) {
+		console.error('Error loading user settings:', error);
+		throw new Error('Failed to load user settings');
 	}
-
-	const memberships = await membership_model
-		.find({
-			user: auth.id,
-			role: {
-				$in: [OrganizationRole.OWNER, OrganizationRole.ADMIN]
-			}
-		})
-		.populate('organization')
-		.lean();
-
-	const organizations = memberships.map((membership) => membership.organization);
-
-	const labels = await label_model
-		.find({
-			organization: {
-				$in: organizations.map((organization) => organization._id)
-			}
-		})
-		.sort({
-			name: 1
-		})
-		.lean();
-
-	return {
-		organizations: JSON.parse(JSON.stringify(organizations)),
-		labels: JSON.parse(JSON.stringify(labels))
-	};
 };
 
 export const actions: Actions = {
-	create_label: async ({ request, params }) => {
-		const data = await request.formData();
+	update_profile: async (event) => {
+		try {
+			const authenticated = authenticate(event.cookies);
 
-		const organization_id = data.get('organization_id');
-		const name = data.get('name');
-		const color = data.get('color');
-
-		if (
-			typeof name !== 'string' ||
-			typeof color !== 'string' ||
-			typeof organization_id !== 'string'
-		) {
-			return fail(400);
-		}
-
-		await label_model.create({
-			name,
-			color,
-			organization: organization_id
-		});
-
-		return {
-			success: true
-		};
-	},
-	update_label: async ({ request }) => {
-		const data = await request.formData();
-
-		const id = data.get('id');
-		const name = data.get('name');
-		const color = data.get('color');
-
-		if (typeof id !== 'string' || typeof name !== 'string' || typeof color !== 'string') {
-			return fail(400);
-		}
-
-		await label_model.updateOne(
-			{
-				_id: id
-			},
-			{
-				$set: {
-					name,
-					color
-				}
+			if (!authenticated) {
+				return {
+					status: 401,
+					error: 'Unauthorized'
+				};
 			}
-		);
 
-		return {
-			success: true
-		};
-	},
-	delete_label: async ({ request }) => {
-		const data = await request.formData();
+			const formData = await event.request.formData();
+			const name = formData.get('name') as string;
+			const avatar = formData.get('avatar') as string;
 
-		const id = data.get('id');
+			const user = await user_model.findById(authenticated.id);
 
-		if (typeof id !== 'string') {
-			return fail(400);
+			if (!user) {
+				return {
+					status: 404,
+					error: 'User not found'
+				};
+			}
+
+			const name_error = verify_name(name);
+
+			if (name_error) {
+				return {
+					status: 400,
+					error: name_error
+				};
+			}
+
+			user.name = name;
+			user.avatar = avatar;
+			await user.save();
+
+			return {
+				status: 200,
+				message: 'Profile updated successfully'
+			};
+		} catch (error) {
+			console.error('Error updating profile:', error);
+			return {
+				status: 500,
+				error: 'Failed to update profile'
+			};
 		}
+	},
+	change_password: async ({ request, cookies }) => {
+		try {
+			const authenticated = authenticate(cookies);
 
-		await label_model.deleteOne({
-			_id: id
-		});
+			if (!authenticated) {
+				return {
+					status: 401,
+					error: 'Unauthorized'
+				};
+			}
 
-		return {
-			success: true
-		};
+			const form = await request.formData();
+
+			const current_password = String(form.get('current_password'));
+			const new_password = String(form.get('new_password'));
+			const confirm_password = String(form.get('confirm_password'));
+
+			if (new_password !== confirm_password) {
+				return {
+					status: 400,
+					error: 'New password and confirm password do not match'
+				};
+			}
+
+			const user = await user_model.findOne({ _id: authenticated.id }).select('+password');
+
+			if (!user) {
+				return {
+					status: 404,
+					error: 'User not found'
+				};
+			}
+
+			const isMatch = await bcrypt.compare(current_password, user.password);
+
+			if (!isMatch) {
+				return {
+					status: 400,
+					error: 'Current password is incorrect'
+				};
+			}
+
+			const hashed_password = await bcrypt.hash(new_password, 10);
+			user.password = hashed_password;
+			await user.save();
+
+			return {
+				success: true,
+				message: 'Password changed successfully'
+			};
+		} catch (error) {
+			console.error('Error changing password:', error);
+			return {
+				status: 500,
+				error: 'Failed to change password'
+			};
+		}
 	}
 };

@@ -14,9 +14,7 @@
 <Card.Root class="mx-auto w-full max-w-sm">
 	<Card.Header>
 		<Card.Title class="text-2xl">Login</Card.Title>
-		<Card.Description
-			>Geben Sie unten Ihre E-Mail-Adresse ein, um sich bei Ihrem Konto anzumelden</Card.Description
-		>
+		<Card.Description>Enter your email address below to log in to your account</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<form method="POST" action="?/login" use:enhance>
@@ -27,14 +25,14 @@
 						id="email-{id}"
 						name="email"
 						type="email"
-						placeholder="v.nachname@hammer.partners"
+						placeholder="youremail@example.com"
 						value={form?.user?.email ?? ''}
 						required
 					/>
 				</Field>
 				<Field>
 					<div class="flex items-center">
-						<FieldLabel for="password-{id}">Passwort</FieldLabel>
+						<FieldLabel for="password-{id}">Password</FieldLabel>
 					</div>
 					<Input id="password-{id}" name="password" type="password" required />
 				</Field>
@@ -42,11 +40,6 @@
 					<Button type="submit" class="w-full">Login</Button>
 				</Field>
 				<Field>
-					{#if form?.user && !('success_message' in form)}
-						<p class="text-sm text-success">
-							Erfolgreich angemeldet als {form.user.email}. Sie können nun fortfahren.
-						</p>
-					{/if}
 					{#if form?.error}
 						<p class="text-sm text-destructive">{form.error}</p>
 					{:else if form && 'success_message' in form && form.success_message}

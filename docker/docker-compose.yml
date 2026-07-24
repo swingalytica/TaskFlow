@@ -1,7 +1,7 @@
 services:
   kanlo-web:
     build:
-      context: ./apps/web
+      context: ../apps/web
       dockerfile: Dockerfile
     container_name: kanlo-web
     restart: unless-stopped
@@ -22,7 +22,7 @@ services:
     container_name: kanlo-mongodb
     restart: unless-stopped
     volumes:
-      - ./mongodb/data:/data/db
+      - ./data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}

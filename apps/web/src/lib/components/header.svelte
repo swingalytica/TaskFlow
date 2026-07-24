@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Logo from '$lib/assets/kanlo.png';
+	import { Button } from './ui/button';
 
 	let { authenticated } = $props();
 </script>
@@ -11,33 +12,15 @@
 	>
 	{#if !authenticated}
 		<nav class="flex items-center gap-2">
-			<a
-				href="/"
-				class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-			>
-				Login
-			</a>
-			<a
-				href="/register"
-				class="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-			>
-				Register
-			</a>
+			<Button href="/">Login</Button>
+			<Button variant="secondary" href="/register">Register</Button>
 		</nav>
 	{:else}
 		<nav class="flex items-center gap-2">
-			<a
-				href="/app/settings"
-				class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-			>
-				Settings
-			</a>
-			<a
-				href="/logout"
-				class="text-destructive-foreground rounded-md bg-destructive px-3 py-2 text-sm font-medium transition-colors hover:opacity-90"
-			>
-				Logout
-			</a>
+			<Button href="/app/settings">Settings</Button>
+			<form action="/logout" method="POST">
+				<Button variant="destructive" type="submit">Logout</Button>
+			</form>
 		</nav>
 	{/if}
 </header>

@@ -11,6 +11,7 @@
 	let { data }: { data: PageData } = $props();
 	let dialog_open = $state(false);
 	let name = $state('');
+	let updateDialogOpen = $state(false);
 </script>
 
 <aside class="flex h-full min-h-screen w-64 flex-col border-r border-border bg-card p-4">
@@ -69,6 +70,18 @@
 						</Button>
 					</ContextMenu.Trigger>
 					<ContextMenu.Content>
+						<ContextMenu.Item>
+							<Button
+								variant="ghost"
+								size="sm"
+								onclick={(e) => {
+									e.preventDefault();
+									updateDialogOpen = true;
+								}}
+							>
+								Update project
+							</Button>
+						</ContextMenu.Item>
 						<form action="?/delete_project" method="POST" use:enhance>
 							<ContextMenu.Item class="text-destructive">
 								<Button variant="ghost" size="sm" type="submit" name="id" value={project._id}>
@@ -79,6 +92,39 @@
 					</ContextMenu.Content>
 				</ContextMenu.Root>
 			</div>
+			<Dialog.Root bind:open={updateDialogOpen}>
+				<Dialog.Content class="sm:max-w-106.25">
+					<form
+						action="?/update_project"
+						method="POST"
+						onsubmit={() => {
+							updateDialogOpen = false;
+						}}
+						use:enhance
+					>
+						<Dialog.Header>
+							<Dialog.Title>Update project</Dialog.Title>
+						</Dialog.Header>
+
+						<div class="mt-4 flex flex-col gap-4">
+							<div class="flex flex-col gap-1.5">
+								<Label for="name">Name</Label>
+								<Input
+									id="name"
+									name="name"
+									value={project.name}
+									required
+									placeholder="My Project"
+								/>
+							</div>
+
+							<Dialog.Footer>
+								<Button type="submit" name="id" value={project._id}>Update</Button>
+							</Dialog.Footer>
+						</div>
+					</form>
+				</Dialog.Content>
+			</Dialog.Root>
 		{/each}
 	</nav>
 </aside>
