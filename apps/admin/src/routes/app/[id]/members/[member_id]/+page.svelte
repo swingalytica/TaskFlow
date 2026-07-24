@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import GoBack from '$lib/components/go-back.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
 	import { permission_mapping, type PermissionKey } from '$lib/shared/permissions.const';
@@ -19,10 +20,12 @@
 
 {#if data.error}
 	<div class="mx-auto max-w-2xl p-10 text-center">
+		<GoBack />
 		<p class="text-sm text-muted-foreground">{data.error}</p>
 	</div>
 {:else}
 	<div class="mx-auto max-w-2xl p-6 sm:p-10">
+		<GoBack />
 		<div class="mb-8">
 			<h1 class="text-2xl font-semibold tracking-tight text-foreground">
 				{data.membership.user.email}
