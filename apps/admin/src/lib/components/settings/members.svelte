@@ -52,20 +52,22 @@
 
 	<div class="flex flex-col divide-y divide-border rounded-xl border border-border bg-card">
 		{#each data.memberships as membership (membership._id)}
-			<div class="flex items-center justify-between gap-4 px-5 py-3">
-				<span class="text-sm text-foreground">{membership.user.email}</span>
+			<a href="/app/{data.organization._id}/members/{membership.user._id}" class="group">
+				<div class="flex items-center justify-between gap-4 px-5 py-3">
+					<span class="text-sm text-foreground">{membership.user.email}</span>
 
-				<div class="flex items-center gap-2">
-					{@render role_select(membership)}
+					<div class="flex items-center gap-2">
+						{@render role_select(membership)}
 
-					<form method="POST" action="?/remove_member" use:enhance>
-						<input type="hidden" name="membership_id" value={membership._id} />
-						<Button type="submit" variant="ghost" size="icon" class="h-8 w-8 text-destructive">
-							<Trash2 class="h-4 w-4" />
-						</Button>
-					</form>
+						<form method="POST" action="?/remove_member" use:enhance>
+							<input type="hidden" name="membership_id" value={membership._id} />
+							<Button type="submit" variant="ghost" size="icon" class="h-8 w-8 text-destructive">
+								<Trash2 class="h-4 w-4" />
+							</Button>
+						</form>
+					</div>
 				</div>
-			</div>
+			</a>
 		{/each}
 	</div>
 </section>
