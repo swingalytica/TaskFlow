@@ -2,7 +2,7 @@ import { authenticate } from '$lib/server/authenticate';
 import { invite_model } from '$lib/server/mongodb/models/invite';
 import { membership_model, OrganizationRole } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
-import { type Actions } from '@sveltejs/kit';
+import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 async function require_admin(user_id: string, organization_id: string) {
@@ -217,28 +217,19 @@ export const actions: Actions = {
 		const authenticated = authenticate(event.cookies);
 
 		if (!authenticated) {
-			return {
-				status: 401,
-				error: 'Not authenticated'
-			};
+			return fail(401, { error: 'Not authenticated' });
 		}
 
 		const organization_id = event.params.id;
 
 		if (!organization_id) {
-			return {
-				status: 400,
-				error: 'Organization ID is required'
-			};
+			return fail(400, { error: 'Organization ID is required' });
 		}
 
 		const admin_membership = await require_admin(authenticated.id, organization_id);
 
 		if (!admin_membership) {
-			return {
-				status: 403,
-				error: 'Not authorized'
-			};
+			return fail(403, { error: 'Not authorized' });
 		}
 
 		const data = await event.request.formData();
@@ -246,10 +237,11 @@ export const actions: Actions = {
 		const role = data.get('role') as string;
 
 		if (!Object.values(OrganizationRole).includes(role as OrganizationRole)) {
-			return {
-				status: 400,
-				error: 'Invalid role'
-			};
+			return fail(400, { error: 'Invalid role' });
+		}
+
+		if (membership_id === admin_membership._id.toString()) {
+			return fail(400, { error: "You can't change your own role" });
 		}
 
 		await membership_model.findOneAndUpdate(
