@@ -1,8 +1,9 @@
 import { authenticate } from '$lib/server/authenticate';
 import { invite_model } from '$lib/server/mongodb/models/invite';
 import { label_model } from '$lib/server/mongodb/models/label';
-import { membership_model, OrganizationRole } from '$lib/server/mongodb/models/membership';
+import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
+import { OrganizationRole } from '$lib/shared/enum';
 import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

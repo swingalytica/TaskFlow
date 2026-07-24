@@ -1,5 +1,5 @@
+import { OrganizationRole } from '$lib/shared/enum';
 import mongoose from 'mongoose';
-import { OrganizationRole } from './membership';
 
 const invite_schema = new mongoose.Schema(
 	{

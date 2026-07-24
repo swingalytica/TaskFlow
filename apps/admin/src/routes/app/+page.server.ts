@@ -1,5 +1,6 @@
 import { authenticate } from '$lib/server/authenticate';
-import { membership_model, OrganizationRole } from '$lib/server/mongodb/models/membership';
+import { membership_model } from '$lib/server/mongodb/models/membership';
+import { OrganizationRole } from '$lib/shared/enum';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
