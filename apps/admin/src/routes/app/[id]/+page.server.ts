@@ -4,25 +4,10 @@ import { label_model } from '$lib/server/mongodb/models/label';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
 import { has_permission } from '$lib/server/permissions';
+import { require_admin } from '$lib/server/utils/requireAdmin';
 import { OrganizationRole } from '$lib/shared/enum';
 import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-
-async function require_admin(user_id: string, organization_id: string) {
-	const membership = await membership_model.findOne({
-		user: user_id,
-		organization: organization_id
-	});
-
-	if (
-		!membership ||
-		(membership.role !== OrganizationRole.OWNER && membership.role !== OrganizationRole.ADMIN)
-	) {
-		return null;
-	}
-
-	return membership;
-}
 
 export const load: PageServerLoad = async (event) => {
 	const authenticated = authenticate(event.cookies);
@@ -197,6 +182,15 @@ export const actions: Actions = {
 			return fail(403, { error: 'Not authorized' });
 		}
 
+		const can_manage_members = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_members'
+		);
+
+		if (!can_manage_members) {
+			return fail(403, { error: 'Insufficient permissions to manage members' });
+		}
+
 		const data = await event.request.formData();
 		const membership_id = data.get('membership_id') as string;
 		const role = data.get('role') as string;
@@ -216,7 +210,6 @@ export const actions: Actions = {
 
 		return { success: true, message: 'Member role updated successfully' };
 	},
-
 	remove_member: async (event) => {
 		const authenticated = authenticate(event.cookies);
 
@@ -234,6 +227,15 @@ export const actions: Actions = {
 
 		if (!admin_membership) {
 			return fail(403, { error: 'Not authorized' });
+		}
+
+		const can_manage_members = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_members'
+		);
+
+		if (!can_manage_members) {
+			return fail(403, { error: 'Insufficient permissions to manage members' });
 		}
 
 		const data = await event.request.formData();

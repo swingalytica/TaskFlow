@@ -1,6 +1,8 @@
 import { authenticate } from '$lib/server/authenticate';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { permission_override_model } from '$lib/server/mongodb/models/permission';
+import { has_permission } from '$lib/server/permissions';
+import { require_admin } from '$lib/server/utils/requireAdmin';
 import type { OrganizationRole } from '$lib/shared/enum';
 import { permissions } from '$lib/shared/permissions.const';
 import { fail, type Actions, type Cookies } from '@sveltejs/kit';
@@ -44,11 +46,30 @@ export const load: PageServerLoad = async (event: {
 
 export const actions: Actions = {
 	set_permission_override: async (event) => {
-		const { member_id } = event.params;
+		const { member_id, id: organization_id } = event.params;
 		const authenticated = authenticate(event.cookies);
 
 		if (!authenticated) {
 			return fail(401, { error: 'Not authenticated' });
+		}
+
+		if (!member_id || !organization_id) {
+			return fail(400, { error: 'Member ID and Organization ID are required' });
+		}
+
+		const admin_membership = await require_admin(authenticated.id, organization_id);
+
+		if (!admin_membership) {
+			return fail(403, { error: 'Not authorized' });
+		}
+
+		const can_manage_members = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_members'
+		);
+
+		if (!can_manage_members) {
+			return fail(403, { error: 'Insufficient permissions to manage members' });
 		}
 
 		const data = await event.request.formData();
@@ -56,7 +77,7 @@ export const actions: Actions = {
 		const state = data.get('state') as string; // 'default' | 'allow' | 'deny'
 
 		if (!permission || !state) {
-			return fail(400, { error: 'permission and state are required' });
+			return fail(400, { error: 'Permission and state are required' });
 		}
 
 		if (state === 'default') {
@@ -72,6 +93,6 @@ export const actions: Actions = {
 			);
 		}
 
-		return { success: true };
+		return { success: true, message: 'Permission override updated successfully' };
 	}
 };
