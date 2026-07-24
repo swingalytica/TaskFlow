@@ -6,6 +6,7 @@ import { label_model } from '$lib/server/mongodb/models/label';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
 import { project_model } from '$lib/server/mongodb/models/project';
+import { has_permission } from '$lib/server/permissions';
 import { create_project } from '$lib/server/projects/create';
 import { delete_project } from '$lib/server/projects/delete';
 import { update_project } from '$lib/server/projects/update';
@@ -81,6 +82,24 @@ export const actions: Actions = {
 				return { success: false, error: 'board_id and name are required' };
 			}
 
+			const membership = await membership_model.findOne({
+				user: authenticated.id,
+				organization: event.params.id
+			});
+
+			if (!membership) {
+				return { success: false, error: 'Not a member of this organization' };
+			}
+
+			const can_create_column = await has_permission(
+				{ _id: membership.user.toString(), role: membership.role },
+				'create_column'
+			);
+
+			if (!can_create_column) {
+				return { success: false, error: 'Insufficient permissions to create section' };
+			}
+
 			const board = await board_model.findById(board_id);
 
 			if (!board) {
@@ -115,6 +134,24 @@ export const actions: Actions = {
 
 			if (!board_id || !column_id || !name) {
 				return { success: false, error: 'board_id, column_id and name are required' };
+			}
+
+			const membership = await membership_model.findOne({
+				user: authenticated.id,
+				organization: event.params.id
+			});
+
+			if (!membership) {
+				return { success: false, error: 'Not a member of this organization' };
+			}
+
+			const can_rename_column = await has_permission(
+				{ _id: membership.user.toString(), role: membership.role },
+				'update_column'
+			);
+
+			if (!can_rename_column) {
+				return { success: false, error: 'Insufficient permissions to rename section' };
 			}
 
 			const board = await board_model.findById(board_id);
@@ -156,6 +193,24 @@ export const actions: Actions = {
 				return { success: false, error: 'board_id and column_id are required' };
 			}
 
+			const membership = await membership_model.findOne({
+				user: authenticated.id,
+				organization: event.params.id
+			});
+
+			if (!membership) {
+				return { success: false, error: 'Not a member of this organization' };
+			}
+
+			const can_delete_column = await has_permission(
+				{ _id: membership.user.toString(), role: membership.role },
+				'delete_column'
+			);
+
+			if (!can_delete_column) {
+				return { success: false, error: 'Insufficient permissions to delete section' };
+			}
+
 			const board = await board_model.findById(board_id);
 
 			if (!board) {
@@ -195,61 +250,86 @@ export const actions: Actions = {
 			return { success: false, error: 'Something went wrong' };
 		}
 	},
-	reorder_columns: async ({ request }) => {
-		const data = await request.formData();
-
-		const board_id = data.get('board_id');
-		const order = data.get('order');
-
-		if (typeof board_id !== 'string' || typeof order !== 'string') {
-			return fail(400, {
-				error: 'Invalid data'
-			});
-		}
-
-		let reordered_columns;
-
+	reorder_columns: async (event) => {
 		try {
-			reordered_columns = JSON.parse(order);
-		} catch {
-			return fail(400, {
-				error: 'Invalid JSON'
-			});
-		}
+			const data = await event.request.formData();
+			const authenticated = authenticate(event.cookies);
+			const board_id = data.get('board_id');
+			const order = data.get('order');
 
-		if (!Array.isArray(reordered_columns)) {
-			return fail(400, {
-				error: 'Invalid order format'
-			});
-		}
-
-		const board = await board_model.findById(board_id);
-
-		if (!board) {
-			return fail(404, {
-				error: 'Board not found'
-			});
-		}
-
-		const column_order_map = new Map(reordered_columns.map((column) => [column.id, column.order]));
-
-		board.columns.forEach((column) => {
-			const new_order = column_order_map.get(column._id.toString());
-
-			if (typeof new_order === 'number') {
-				column.order = new_order;
+			if (!authenticated) {
+				return fail(401, {
+					error: 'Not authenticated'
+				});
 			}
-		});
 
-		board.columns.sort((a, b) => a.order - b.order);
+			if (typeof board_id !== 'string' || typeof order !== 'string') {
+				return fail(400, {
+					error: 'Invalid data'
+				});
+			}
 
-		board.markModified('columns');
+			const reordered_columns = JSON.parse(order);
 
-		await board.save();
+			if (!Array.isArray(reordered_columns)) {
+				return fail(400, {
+					error: 'Invalid order format'
+				});
+			}
 
-		return {
-			success: true
-		};
+			const membership = await membership_model.findOne({
+				user: authenticated.id,
+				organization: event.params.id
+			});
+
+			if (!membership) {
+				return { success: false, error: 'Not a member of this organization' };
+			}
+
+			const can_reorder_columns = await has_permission(
+				{ _id: membership.user.toString(), role: membership.role },
+				'reorder_columns'
+			);
+
+			if (!can_reorder_columns) {
+				return { success: false, error: 'Insufficient permissions to reorder sections' };
+			}
+
+			const board = await board_model.findById(board_id);
+
+			if (!board) {
+				return fail(404, {
+					error: 'Board not found'
+				});
+			}
+
+			const column_order_map = new Map(
+				reordered_columns.map((column) => [column.id, column.order])
+			);
+
+			board.columns.forEach((column) => {
+				const new_order = column_order_map.get(column._id.toString());
+
+				if (typeof new_order === 'number') {
+					column.order = new_order;
+				}
+			});
+
+			board.columns.sort((a, b) => a.order - b.order);
+
+			board.markModified('columns');
+
+			await board.save();
+
+			return {
+				success: true
+			};
+		} catch (error) {
+			console.error(error);
+			return fail(500, {
+				error: 'Internal Server Error'
+			});
+		}
 	},
 	add_card: async ({ request, cookies }) => {
 		try {
