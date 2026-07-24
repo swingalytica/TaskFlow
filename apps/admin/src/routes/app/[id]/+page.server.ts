@@ -2,7 +2,7 @@ import { authenticate } from '$lib/server/authenticate';
 import { invite_model } from '$lib/server/mongodb/models/invite';
 import { membership_model, OrganizationRole } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
-import { fail, type Actions } from '@sveltejs/kit';
+import { type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 async function require_admin(user_id: string, organization_id: string) {
@@ -59,19 +59,28 @@ export const actions: Actions = {
 		const authenticated = authenticate(event.cookies);
 
 		if (!authenticated) {
-			return fail(401, { error: 'Not authenticated' });
+			return {
+				status: 401,
+				error: 'Not authenticated'
+			};
 		}
 
 		const organization_id = event.params.id;
 
 		if (!organization_id) {
-			return fail(400, { error: 'Organization ID is required' });
+			return {
+				status: 400,
+				error: 'Organization ID is required'
+			};
 		}
 
 		const admin_membership = await require_admin(authenticated.id, organization_id);
 
 		if (!admin_membership) {
-			return fail(403, { error: 'Not authorized' });
+			return {
+				status: 401,
+				error: 'Not authorized'
+			};
 		}
 
 		const data = await event.request.formData();
@@ -79,31 +88,43 @@ export const actions: Actions = {
 		const icon = (data.get('icon') as string)?.trim();
 
 		if (!name) {
-			return fail(400, { error: 'Name is required' });
+			return {
+				status: 400,
+				error: 'Name is required'
+			};
 		}
 
 		await organization_model.findByIdAndUpdate(organization_id, { name, icon });
 
-		return { success: true };
+		return { success: true, message: 'Organization updated successfully' };
 	},
 
 	create_invite: async (event) => {
 		const authenticated = authenticate(event.cookies);
 
 		if (!authenticated) {
-			return fail(401, { error: 'Not authenticated' });
+			return {
+				status: 401,
+				error: 'Not authenticated'
+			};
 		}
 
 		const organization_id = event.params.id;
 
 		if (!organization_id) {
-			return fail(400, { error: 'Organization ID is required' });
+			return {
+				status: 400,
+				error: 'Organization ID is required'
+			};
 		}
 
 		const admin_membership = await require_admin(authenticated.id, organization_id);
 
 		if (!admin_membership) {
-			return fail(403, { error: 'Not authorized' });
+			return {
+				status: 403,
+				error: 'Not authorized'
+			};
 		}
 
 		const data = await event.request.formData();
@@ -111,7 +132,10 @@ export const actions: Actions = {
 		const role = data.get('role') as string;
 
 		if (!email) {
-			return fail(400, { error: 'Email is required' });
+			return {
+				status: 400,
+				error: 'Email is required'
+			};
 		}
 
 		const memberships = await membership_model
@@ -123,7 +147,10 @@ export const actions: Actions = {
 		);
 
 		if (already_member) {
-			return fail(400, { error: 'This person is already a member' });
+			return {
+				status: 400,
+				error: 'This person is already a member'
+			};
 		}
 
 		try {
@@ -140,10 +167,13 @@ export const actions: Actions = {
 				invited_by: authenticated.id
 			});
 
-			return { success: true };
+			return { success: true, message: 'Invite created successfully' };
 		} catch (error) {
 			console.error(error);
-			return fail(500, { error: 'Failed to create invite (maybe already invited?)' });
+			return {
+				status: 500,
+				error: 'Failed to create invite (maybe already invited?)'
+			};
 		}
 	},
 
@@ -151,19 +181,28 @@ export const actions: Actions = {
 		const authenticated = authenticate(event.cookies);
 
 		if (!authenticated) {
-			return fail(401, { error: 'Not authenticated' });
+			return {
+				status: 401,
+				error: 'Not authenticated'
+			};
 		}
 
 		const organization_id = event.params.id;
 
 		if (!organization_id) {
-			return fail(400, { error: 'Organization ID is required' });
+			return {
+				status: 400,
+				error: 'Organization ID is required'
+			};
 		}
 
 		const admin_membership = await require_admin(authenticated.id, organization_id);
 
 		if (!admin_membership) {
-			return fail(403, { error: 'Not authorized' });
+			return {
+				status: 403,
+				error: 'Not authorized'
+			};
 		}
 
 		const data = await event.request.formData();
@@ -171,26 +210,35 @@ export const actions: Actions = {
 
 		await invite_model.deleteOne({ _id: invite_id, organization: organization_id });
 
-		return { success: true };
+		return { success: true, message: 'Invite revoked successfully' };
 	},
 
 	update_member_role: async (event) => {
 		const authenticated = authenticate(event.cookies);
 
 		if (!authenticated) {
-			return fail(401, { error: 'Not authenticated' });
+			return {
+				status: 401,
+				error: 'Not authenticated'
+			};
 		}
 
 		const organization_id = event.params.id;
 
 		if (!organization_id) {
-			return fail(400, { error: 'Organization ID is required' });
+			return {
+				status: 400,
+				error: 'Organization ID is required'
+			};
 		}
 
 		const admin_membership = await require_admin(authenticated.id, organization_id);
 
 		if (!admin_membership) {
-			return fail(403, { error: 'Not authorized' });
+			return {
+				status: 403,
+				error: 'Not authorized'
+			};
 		}
 
 		const data = await event.request.formData();
@@ -198,7 +246,10 @@ export const actions: Actions = {
 		const role = data.get('role') as string;
 
 		if (!Object.values(OrganizationRole).includes(role as OrganizationRole)) {
-			return fail(400, { error: 'Invalid role' });
+			return {
+				status: 400,
+				error: 'Invalid role'
+			};
 		}
 
 		await membership_model.findOneAndUpdate(
@@ -206,37 +257,49 @@ export const actions: Actions = {
 			{ role }
 		);
 
-		return { success: true };
+		return { success: true, message: 'Member role updated successfully' };
 	},
 
 	remove_member: async (event) => {
 		const authenticated = authenticate(event.cookies);
 
 		if (!authenticated) {
-			return fail(401, { error: 'Not authenticated' });
+			return {
+				status: 401,
+				error: 'Not authenticated'
+			};
 		}
 
 		const organization_id = event.params.id;
 
 		if (!organization_id) {
-			return fail(400, { error: 'Organization ID is required' });
+			return {
+				status: 400,
+				error: 'Organization ID is required'
+			};
 		}
 
 		const admin_membership = await require_admin(authenticated.id, organization_id);
 
 		if (!admin_membership) {
-			return fail(403, { error: 'Not authorized' });
+			return {
+				status: 403,
+				error: 'Not authorized'
+			};
 		}
 
 		const data = await event.request.formData();
 		const membership_id = data.get('membership_id') as string;
 
 		if (membership_id === admin_membership._id.toString()) {
-			return fail(400, { error: "You can't remove yourself" });
+			return {
+				status: 400,
+				error: "You can't remove yourself"
+			};
 		}
 
 		await membership_model.deleteOne({ _id: membership_id, organization: organization_id });
 
-		return { success: true };
+		return { success: true, message: 'Member removed successfully' };
 	}
 };

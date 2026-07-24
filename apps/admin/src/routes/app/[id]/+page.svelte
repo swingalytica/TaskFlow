@@ -9,16 +9,29 @@
 	import { generateLogoFallback } from '$lib/utils/logo';
 	import { Trash2, UserPlus } from '@lucide/svelte';
 	import { tick } from 'svelte';
-	import type { PageData } from './$types';
+	import { toast } from 'svelte-sonner';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let name = $state(data.organization?.name ?? '');
-	let icon = $state(data.organization?.icon ?? '');
+	let name = $derived(data.organization?.name ?? '');
+	let icon = $derived(data.organization?.icon ?? '');
 	let invite_email = $state('');
 	let invite_role = $state('MEMBER');
 
 	let role_forms: Record<string, HTMLFormElement> = {};
+
+	$effect(() => {
+		if (form?.success) {
+			if (form.message) {
+				toast.success(form.message);
+			}
+		} else if (form?.error) {
+			if (form.error) {
+				toast.error(form.error);
+			}
+		}
+	});
 
 	async function handle_role_change(
 		membership_id: string,
