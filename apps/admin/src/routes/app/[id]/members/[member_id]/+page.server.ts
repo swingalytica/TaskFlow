@@ -31,7 +31,7 @@ export const load: PageServerLoad = async (event: {
 		return { error: 'Member not found' };
 	}
 
-	const overrides = await permission_override_model.find({ membership: membership._id }).lean();
+	const overrides = await permission_override_model.find({ membership: member_id }).lean();
 
 	const override_map = new Map(overrides.map((o) => [o.permission, o.value]));
 
@@ -77,15 +77,6 @@ export const actions: Actions = {
 				return fail(403, { error: 'Insufficient permissions to manage members' });
 			}
 
-			const member_membership = await membership_model.findOne({
-				user: member_id,
-				organization: organization_id
-			});
-
-			if (!member_membership) {
-				return fail(404, { error: 'Member not found in this organization' });
-			}
-
 			const data = await event.request.formData();
 			const permission = data.get('permission') as string;
 			const state = data.get('state') as string; // 'default' | 'allow' | 'deny'
@@ -100,12 +91,12 @@ export const actions: Actions = {
 
 			if (state === 'default') {
 				await permission_override_model.deleteOne({
-					membership: member_membership._id,
+					membership: member_id,
 					permission
 				});
 			} else {
 				await permission_override_model.findOneAndUpdate(
-					{ membership: member_membership._id, permission },
+					{ membership: member_id, permission },
 					{ value: state === 'allow' },
 					{ upsert: true }
 				);

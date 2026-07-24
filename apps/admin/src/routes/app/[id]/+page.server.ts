@@ -63,6 +63,15 @@ export const actions: Actions = {
 			return fail(403, { error: 'Not authorized' });
 		}
 
+		const can_update_organization = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'update_organization'
+		);
+
+		if (!can_update_organization) {
+			return fail(403, { error: 'Insufficient permissions to update organization' });
+		}
+
 		const data = await event.request.formData();
 		const name = (data.get('name') as string)?.trim();
 		const icon = (data.get('icon') as string)?.trim();
@@ -92,6 +101,15 @@ export const actions: Actions = {
 
 		if (!admin_membership) {
 			return fail(403, { error: 'Not authorized' });
+		}
+
+		const can_manage_invites = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_invites'
+		);
+
+		if (!can_manage_invites) {
+			return fail(403, { error: 'Insufficient permissions to manage invites' });
 		}
 
 		const data = await event.request.formData();
@@ -151,6 +169,15 @@ export const actions: Actions = {
 
 		if (!admin_membership) {
 			return fail(403, { error: 'Not authorized' });
+		}
+
+		const can_manage_invites = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_invites'
+		);
+
+		if (!can_manage_invites) {
+			return fail(403, { error: 'Insufficient permissions to manage invites' });
 		}
 
 		const data = await event.request.formData();
@@ -270,6 +297,8 @@ export const actions: Actions = {
 			'manage_labels'
 		);
 
+		console.log('can_manage_label', can_manage_label);
+
 		if (!can_manage_label) {
 			return fail(403, { error: 'Insufficient permissions to manage labels' });
 		}
@@ -290,7 +319,6 @@ export const actions: Actions = {
 
 		return { success: true };
 	},
-
 	delete_label: async (event) => {
 		const authenticated = authenticate(event.cookies);
 
