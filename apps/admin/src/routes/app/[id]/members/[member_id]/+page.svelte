@@ -2,17 +2,10 @@
 	import { enhance } from '$app/forms';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import { permission_mapping, type PermissionKey } from '$lib/shared/permissions.const';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-
-	const permission_labels: Record<string, string> = {
-		create_project: 'Create projects',
-		delete_project: 'Delete projects',
-		manage_members: 'Manage members',
-		manage_labels: 'Manage labels',
-		manage_invites: 'Manage invites'
-	};
 
 	function current_state(row: { override: boolean | null }): string {
 		if (row.override === null) return 'default';
@@ -46,7 +39,7 @@
 				<div class="flex items-center justify-between gap-4 px-5 py-4">
 					<div class="flex flex-col">
 						<span class="text-sm font-medium text-foreground">
-							{permission_labels[row.key] ?? row.key}
+							{permission_mapping[row.key as PermissionKey] ?? row.key}
 						</span>
 						<span class="text-xs text-muted-foreground">
 							Default for {data.membership.role.toLowerCase()}: {row.default_allowed

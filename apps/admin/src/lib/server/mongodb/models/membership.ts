@@ -1,10 +1,5 @@
+import { OrganizationRole } from '$lib/shared/enum';
 import mongoose from 'mongoose';
-
-export enum OrganizationRole {
-	OWNER = 'OWNER',
-	ADMIN = 'ADMIN',
-	MEMBER = 'MEMBER'
-}
 
 const membership_schema = new mongoose.Schema(
 	{

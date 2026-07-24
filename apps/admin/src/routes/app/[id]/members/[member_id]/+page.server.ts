@@ -1,7 +1,8 @@
 import { authenticate } from '$lib/server/authenticate';
-import { membership_model, OrganizationRole } from '$lib/server/mongodb/models/membership';
+import { membership_model } from '$lib/server/mongodb/models/membership';
 import { permission_override_model } from '$lib/server/mongodb/models/permission';
-import { permissions } from '$lib/server/permissions';
+import type { OrganizationRole } from '$lib/shared/enum';
+import { permissions } from '$lib/shared/permissions.const';
 import { fail, type Actions, type Cookies } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
