@@ -1,6 +1,11 @@
 import type { Cookies } from '@sveltejs/kit';
 import { authenticate } from '../authenticate';
-import { board_model, membership_model, project_model } from '../mongodb/models';
+import {
+	board_model,
+	membership_model,
+	project_model
+} from '../mongodb/models';
+import { has_permission } from '../permissions';
 
 export async function create_project(
 	cookies: Cookies,
@@ -23,6 +28,15 @@ export async function create_project(
 
 	if (!membership) {
 		return { error: 'Not a member of this organization' };
+	}
+
+	const can_create_project = await has_permission(
+		{ _id: membership.user.toString(), role: membership.role },
+		'create_project'
+	);
+
+	if (!can_create_project) {
+		return { error: 'Insufficient permissions to create a project' };
 	}
 
 	const data = await request.formData();

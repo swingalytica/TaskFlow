@@ -3,6 +3,7 @@
 	import SidebarFilter from '$lib/components/sidebar-filter.svelte';
 	import SidebarLeft from '$lib/components/sidebar-left.svelte';
 	import type { Filter } from '$lib/types/filter';
+	import { toast } from 'svelte-sonner';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -12,6 +13,15 @@
 		show_completed: true,
 		labels: [] as string[],
 		due_date: null
+	});
+
+	$effect(() => {
+		if (form) {
+			console.log('Form data:', form);
+			if (form.error) {
+				toast.error(form.error, { duration: 5000 });
+			}
+		}
 	});
 </script>
 
