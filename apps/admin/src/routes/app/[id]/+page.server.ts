@@ -3,6 +3,7 @@ import { invite_model } from '$lib/server/mongodb/models/invite';
 import { label_model } from '$lib/server/mongodb/models/label';
 import { membership_model } from '$lib/server/mongodb/models/membership';
 import { organization_model } from '$lib/server/mongodb/models/organization';
+import { has_permission } from '$lib/server/permissions';
 import { OrganizationRole } from '$lib/shared/enum';
 import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
@@ -265,6 +266,15 @@ export const actions: Actions = {
 			return fail(403, { error: 'Not authorized' });
 		}
 
+		const can_manage_label = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_labels'
+		);
+
+		if (!can_manage_label) {
+			return fail(403, { error: 'Insufficient permissions to manage labels' });
+		}
+
 		const data = await event.request.formData();
 		const name = (data.get('name') as string)?.trim();
 		const color = (data.get('color') as string)?.trim();
@@ -301,6 +311,15 @@ export const actions: Actions = {
 			return fail(403, { error: 'Not authorized' });
 		}
 
+		const can_manage_label = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_labels'
+		);
+
+		if (!can_manage_label) {
+			return fail(403, { error: 'Insufficient permissions to manage labels' });
+		}
+
 		const data = await event.request.formData();
 		const label_id = data.get('label_id') as string;
 
@@ -325,6 +344,15 @@ export const actions: Actions = {
 
 		if (!admin_membership) {
 			return fail(403, { error: 'Not authorized' });
+		}
+
+		const can_manage_label = await has_permission(
+			{ _id: admin_membership.user.toString(), role: admin_membership.role },
+			'manage_labels'
+		);
+
+		if (!can_manage_label) {
+			return fail(403, { error: 'Insufficient permissions to manage labels' });
 		}
 
 		const data = await event.request.formData();
